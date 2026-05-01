@@ -14,7 +14,7 @@ st.markdown("Upload JiBe PMS exports for two sister vessels to identify missing 
 # ── helpers ──────────────────────────────────────────────────────────────────
 
 def load_csv(uploaded_file):
-    """Read JiBe CSV, rename unnamed columns, strip machinery suffixes."""
+    """Read JiBe CSV and rename unnamed columns."""
     df = pd.read_csv(uploaded_file, header=0, dtype=str)
 
     # Column 1 (index 1) = Critical flag
@@ -25,67 +25,40 @@ def load_csv(uploaded_file):
     if "Unnamed: 2" in df.columns:
         df = df.drop(columns=["Unnamed: 2"])
 
-    # Normalise key text columns
+    # Normalise key text columns (whitespace only — no value changes)
     for col in ["Job Code", "Machinery Location", "Sub Component Location",
                 "Frequency", "Job Action", "Title", "Function", "Department"]:
         if col in df.columns:
             df[col] = df[col].astype(str).str.strip()
 
-    # Strip trailing instance numbers from Machinery Location  e.g. "Boiler#1" → "Boiler"
-    df["Machinery Clean"] = df["Machinery Location"].str.replace(r"#\d+$", "", regex=True).str.strip()
-
     return df
-
-
-def frequency_to_days(freq_str):
-    """Convert JiBe frequency string to approximate days for comparison."""
-    if pd.isna(freq_str) or freq_str in ("nan", ""):
-        return None
-    s = str(freq_str).strip()
-    try:
-        num, unit = s.split(" ", 1)
-        num = float(num)
-        unit = unit.lower()
-        if "day" in unit:
-            return num
-        elif "month" in unit:
-            return num * 30
-        elif "hour" in unit:
-            return num / 24          # rough proxy
-        elif "year" in unit:
-            return num * 365
-    except Exception:
-        pass
-    return None
 
 
 def compare(df_a, df_b, vessel_a, vessel_b):
     """Return three DataFrames: missing_in_b, missing_in_a, freq_mismatches."""
 
-    # Build a unique job key: Job Code is the most reliable identifier in JiBe
+    # Job Code is the unique identifier in JiBe
     set_a = set(df_a["Job Code"].dropna())
     set_b = set(df_b["Job Code"].dropna())
 
     # ── Missing jobs ──────────────────────────────────────────────────────────
-    cols_show = ["Job Code", "Critical", "Machinery Clean", "Sub Component Location",
+    cols_show = ["Job Code", "Critical", "Machinery Location", "Sub Component Location",
                  "Frequency", "Job Action", "Title", "Function", "Department"]
-    cols_show = [c for c in cols_show if c in df_a.columns or c in df_b.columns]
 
     missing_in_b = df_a[df_a["Job Code"].isin(set_a - set_b)][
         [c for c in cols_show if c in df_a.columns]
     ].copy()
-    missing_in_b.rename(columns={"Machinery Clean": "Machinery"}, inplace=True)
 
     missing_in_a = df_b[df_b["Job Code"].isin(set_b - set_a)][
         [c for c in cols_show if c in df_b.columns]
     ].copy()
-    missing_in_a.rename(columns={"Machinery Clean": "Machinery"}, inplace=True)
 
     # ── Frequency mismatches (jobs present in both) ──────────────────────────
+    # Compare frequency as raw string — no conversion
     common_codes = set_a & set_b
     merged = pd.merge(
         df_a[df_a["Job Code"].isin(common_codes)][
-            ["Job Code", "Critical", "Machinery Clean", "Sub Component Location",
+            ["Job Code", "Critical", "Machinery Location", "Sub Component Location",
              "Frequency", "Job Action", "Title", "Function", "Department"]
         ],
         df_b[df_b["Job Code"].isin(common_codes)][
@@ -98,18 +71,12 @@ def compare(df_a, df_b, vessel_a, vessel_b):
     freq_col_a = f"Frequency ({vessel_a})"
     freq_col_b = f"Frequency ({vessel_b})"
 
-    merged["_days_a"] = merged[freq_col_a].apply(frequency_to_days)
-    merged["_days_b"] = merged[freq_col_b].apply(frequency_to_days)
-
     freq_mismatch = merged[
-        (merged[freq_col_a] != merged[freq_col_b]) &
-        merged["_days_a"].notna() &
-        merged["_days_b"].notna()
+        merged[freq_col_a] != merged[freq_col_b]
     ][[
-        "Job Code", "Critical", "Machinery Clean", "Sub Component Location",
+        "Job Code", "Critical", "Machinery Location", "Sub Component Location",
         freq_col_a, freq_col_b, "Job Action", "Title", "Function", "Department"
     ]].copy()
-    freq_mismatch.rename(columns={"Machinery Clean": "Machinery"}, inplace=True)
 
     return missing_in_b, missing_in_a, freq_mismatch
 
