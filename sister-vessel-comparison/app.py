@@ -13,8 +13,8 @@ st.markdown("Upload JiBe PMS exports for two sister vessels to identify missing 
 
 # ── helpers ──────────────────────────────────────────────────────────────────
 
-def load_csv(uploaded_file):
-    df = pd.read_csv(uploaded_file, header=0, dtype=str)
+def load_csv(bytes_data):
+    df = pd.read_csv(io.BytesIO(bytes_data), header=0, dtype=str)
     cols = df.columns.tolist()
     cols[1] = "Critical"
     df.columns = cols
@@ -105,21 +105,29 @@ def apply_filters(df, dept_filter, fn_filter, machinery_filter, critical_only):
     return df
 
 
-# ── Sidebar — file upload only ────────────────────────────────────────────────
+# ── Sidebar ───────────────────────────────────────────────────────────────────
 
 with st.sidebar:
     st.header("📂 Upload PMS Exports")
     st.markdown("Export pending jobs from JiBe for each vessel and upload the CSV files below.")
-
-    file_a = st.file_uploader("Vessel A — CSV", type=["csv"], key="vessel_a")
+    file_a = st.file_uploader("Vessel A — CSV", type=["csv"], key="file_a")
     st.divider()
-    file_b = st.file_uploader("Vessel B — CSV", type=["csv"], key="vessel_b")
+    file_b = st.file_uploader("Vessel B — CSV", type=["csv"], key="file_b")
     st.divider()
     run = st.button("🔍 Run Comparison", type="primary", use_container_width=True)
 
-# ── Main panel ────────────────────────────────────────────────────────────────
+# ── Store raw bytes on Run ────────────────────────────────────────────────────
 
-if not run and "results" not in st.session_state:
+if run:
+    if not file_a or not file_b:
+        st.warning("Please upload CSV files for **both** vessels before running.")
+        st.stop()
+    st.session_state["bytes_a"] = file_a.read()
+    st.session_state["bytes_b"] = file_b.read()
+
+# ── Gate: show landing if no data yet ────────────────────────────────────────
+
+if "bytes_a" not in st.session_state or "bytes_b" not in st.session_state:
     st.info("👈  Upload two JiBe PMS CSV exports in the sidebar and click **Run Comparison**.")
     with st.expander("ℹ️  How to export from JiBe"):
         st.markdown("""
@@ -130,46 +138,15 @@ if not run and "results" not in st.session_state:
         """)
     st.stop()
 
-# ── Run comparison and store in session state ─────────────────────────────────
+# ── Parse CSVs from stored bytes (always fresh, no pickle issues) ─────────────
 
-if run:
-    if not file_a or not file_b:
-        st.warning("Please upload CSV files for **both** vessels before running.")
-        st.stop()
+df_a = load_csv(st.session_state["bytes_a"])
+df_b = load_csv(st.session_state["bytes_b"])
 
-    with st.spinner("Comparing PMS data…"):
-        df_a = load_csv(file_a)
-        df_b = load_csv(file_b)
+vessel_a = get_vessel_name(df_a)
+vessel_b = get_vessel_name(df_b)
 
-        vessel_a_name = get_vessel_name(df_a)
-        vessel_b_name = get_vessel_name(df_b)
-
-        missing_b, missing_a, freq_mismatch = compare(df_a, df_b, vessel_a_name, vessel_b_name)
-
-        st.session_state["results"] = {
-            "df_a": df_a,
-            "df_b": df_b,
-            "vessel_a": vessel_a_name,
-            "vessel_b": vessel_b_name,
-            "missing_b": missing_b,
-            "missing_a": missing_a,
-            "freq_mismatch": freq_mismatch,
-        }
-
-# ── Retrieve results from session state ──────────────────────────────────────
-
-if "results" not in st.session_state:
-    st.warning("No results found. Please upload files and click Run Comparison.")
-    st.stop()
-
-r             = st.session_state["results"]
-df_a          = r["df_a"]
-df_b          = r["df_b"]
-vessel_a      = r["vessel_a"]
-vessel_b      = r["vessel_b"]
-missing_b     = r["missing_b"]
-missing_a     = r["missing_a"]
-freq_mismatch = r["freq_mismatch"]
+missing_b, missing_a, freq_mismatch = compare(df_a, df_b, vessel_a, vessel_b)
 
 # ── Summary metrics ───────────────────────────────────────────────────────────
 
@@ -183,23 +160,17 @@ c5.metric("Frequency Mismatches", len(freq_mismatch), delta=f"{len(freq_mismatch
 
 st.divider()
 
-# ── Filters — live, update instantly without re-running comparison ─────────────
+# ── Filters ───────────────────────────────────────────────────────────────────
 
 with st.expander("🔧 Filter Results", expanded=False):
     col1, col2, col3, col4 = st.columns(4)
 
-    all_dept = sorted(
-        {v for v in df_a["Department"].tolist() + df_b["Department"].tolist()
-         if v not in ("", "nan", "None")}
-    )
-    all_fn = sorted(
-        {v for v in df_a["Function"].tolist() + df_b["Function"].tolist()
-         if v not in ("", "nan", "None")}
-    )
-    all_machinery = sorted(
-        {v for v in df_a["Machinery Location"].tolist() + df_b["Machinery Location"].tolist()
-         if v not in ("", "nan", "None")}
-    )
+    all_dept = sorted({v for v in df_a["Department"].tolist() + df_b["Department"].tolist()
+                       if v not in ("", "nan", "None")})
+    all_fn = sorted({v for v in df_a["Function"].tolist() + df_b["Function"].tolist()
+                     if v not in ("", "nan", "None")})
+    all_machinery = sorted({v for v in df_a["Machinery Location"].tolist() + df_b["Machinery Location"].tolist()
+                            if v not in ("", "nan", "None")})
 
     with col1:
         dept_filter = st.multiselect("Department", options=all_dept)
@@ -210,7 +181,6 @@ with st.expander("🔧 Filter Results", expanded=False):
     with col4:
         critical_only = st.checkbox("Critical jobs only (C flag)")
 
-# Apply filters live
 mb = apply_filters(missing_b,     dept_filter, fn_filter, machinery_filter, critical_only)
 ma = apply_filters(missing_a,     dept_filter, fn_filter, machinery_filter, critical_only)
 fm = apply_filters(freq_mismatch, dept_filter, fn_filter, machinery_filter, critical_only)
