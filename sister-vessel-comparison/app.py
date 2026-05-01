@@ -165,12 +165,14 @@ st.divider()
 with st.expander("🔧 Filter Results", expanded=False):
     col1, col2, col3, col4 = st.columns(4)
 
-    all_dept = sorted({v for v in df_a["Department"].tolist() + df_b["Department"].tolist()
-                       if v not in ("", "nan", "None")})
-    all_fn = sorted({v for v in df_a["Function"].tolist() + df_b["Function"].tolist()
-                     if v not in ("", "nan", "None")})
-    all_machinery = sorted({v for v in df_a["Machinery Location"].tolist() + df_b["Machinery Location"].tolist()
-                            if v not in ("", "nan", "None")})
+    def clean_opts(series_a, series_b):
+        raw = series_a.tolist() + series_b.tolist()
+        return sorted({str(v).strip() for v in raw
+                       if v is not None and str(v).strip() not in ("", "nan", "None", "NaN")})
+
+    all_dept      = clean_opts(df_a["Department"],         df_b["Department"])
+    all_fn        = clean_opts(df_a["Function"],           df_b["Function"])
+    all_machinery = clean_opts(df_a["Machinery Location"], df_b["Machinery Location"])
 
     with col1:
         dept_filter = st.multiselect("Department", options=all_dept)
