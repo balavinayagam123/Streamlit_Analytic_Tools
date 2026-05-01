@@ -158,6 +158,10 @@ if run:
 
 # ── Retrieve results from session state ──────────────────────────────────────
 
+if "results" not in st.session_state:
+    st.warning("No results found. Please upload files and click Run Comparison.")
+    st.stop()
+
 r             = st.session_state["results"]
 df_a          = r["df_a"]
 df_b          = r["df_b"]
