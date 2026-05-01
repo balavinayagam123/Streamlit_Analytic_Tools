@@ -37,34 +37,45 @@ def load_csv(uploaded_file):
 def compare(df_a, df_b, vessel_a, vessel_b):
     """Return three DataFrames: missing_in_b, missing_in_a, freq_mismatches."""
 
-    # Job Code is the unique identifier in JiBe
-    set_a = set(df_a["Job Code"].dropna())
-    set_b = set(df_b["Job Code"].dropna())
+    # Composite key: Job Code + Machinery Location + Sub Component Location + Title
+    # Job Code alone is NOT unique — same code applies to many machinery items
+    # Title further differentiates repeated physical instances (e.g. multiple watertight doors)
+    KEY = ["Job Code", "Machinery Location", "Sub Component Location", "Title"]
+
+    def make_key(df):
+        return df[KEY].fillna("").apply(lambda r: "|||".join(r.values), axis=1)
+
+    df_a = df_a.copy()
+    df_b = df_b.copy()
+    df_a["_key"] = make_key(df_a)
+    df_b["_key"] = make_key(df_b)
+
+    set_a = set(df_a["_key"])
+    set_b = set(df_b["_key"])
 
     # ── Missing jobs ──────────────────────────────────────────────────────────
     cols_show = ["Job Code", "Critical", "Machinery Location", "Sub Component Location",
                  "Frequency", "Job Action", "Title", "Function", "Department"]
 
-    missing_in_b = df_a[df_a["Job Code"].isin(set_a - set_b)][
+    missing_in_b = df_a[df_a["_key"].isin(set_a - set_b)][
         [c for c in cols_show if c in df_a.columns]
     ].copy()
 
-    missing_in_a = df_b[df_b["Job Code"].isin(set_b - set_a)][
+    missing_in_a = df_b[df_b["_key"].isin(set_b - set_a)][
         [c for c in cols_show if c in df_b.columns]
     ].copy()
 
-    # ── Frequency mismatches (jobs present in both) ──────────────────────────
-    # Compare frequency as raw string — no conversion
-    common_codes = set_a & set_b
+    # ── Frequency mismatches (jobs present in both, different frequency) ──────
+    common_keys = set_a & set_b
+
     merged = pd.merge(
-        df_a[df_a["Job Code"].isin(common_codes)][
-            ["Job Code", "Critical", "Machinery Location", "Sub Component Location",
-             "Frequency", "Job Action", "Title", "Function", "Department"]
+        df_a[df_a["_key"].isin(common_keys)][
+            ["_key", "Job Code", "Critical", "Machinery Location",
+             "Sub Component Location", "Frequency", "Job Action",
+             "Title", "Function", "Department"]
         ],
-        df_b[df_b["Job Code"].isin(common_codes)][
-            ["Job Code", "Frequency"]
-        ],
-        on="Job Code",
+        df_b[df_b["_key"].isin(common_keys)][["_key", "Frequency"]],
+        on="_key",
         suffixes=(f" ({vessel_a})", f" ({vessel_b})")
     )
 
