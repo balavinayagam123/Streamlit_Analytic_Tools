@@ -1,6 +1,8 @@
 import streamlit as st
 import pandas as pd
 import io
+import plotly.express as px
+import plotly.graph_objects as go
 
 st.set_page_config(
     page_title="Sister Vessel PMS Comparison",
@@ -105,6 +107,61 @@ def apply_filters(df, dept_filter, fn_filter, machinery_filter, critical_only):
     return df
 
 
+def style_missing(df):
+    """Highlight Critical rows in red, others in default."""
+    def row_style(row):
+        if str(row.get("Critical", "")).strip() == "C":
+            return ["background-color: #ffe0e0; color: #900"] * len(row)
+        return [""] * len(row)
+    return df.style.apply(row_style, axis=1)
+
+
+def style_freq_mismatch(df, vessel_a, vessel_b):
+    """
+    - Critical rows: red background
+    - Frequency columns: amber background to draw eye
+    """
+    freq_col_a = f"Frequency ({vessel_a})"
+    freq_col_b = f"Frequency ({vessel_b})"
+
+    def row_style(row):
+        is_critical = str(row.get("Critical", "")).strip() == "C"
+        base = "background-color: #ffe0e0; color: #900" if is_critical else ""
+        styles = []
+        for col in row.index:
+            if col in (freq_col_a, freq_col_b):
+                if is_critical:
+                    styles.append("background-color: #ff9900; color: #000; font-weight: bold")
+                else:
+                    styles.append("background-color: #fff3cd; color: #7a5900; font-weight: bold")
+            else:
+                styles.append(base)
+        return styles
+
+    return df.style.apply(row_style, axis=1)
+
+
+def freq_sort_key(freq_str):
+    """Convert frequency string to days for sorting in charts."""
+    try:
+        num, unit = str(freq_str).strip().split(" ", 1)
+        num = float(num)
+        unit = unit.lower()
+        if "day" in unit:   return num
+        if "month" in unit: return num * 30
+        if "hour" in unit:  return num / 24
+        if "year" in unit:  return num * 365
+    except Exception:
+        pass
+    return 99999
+
+
+def clean_opts(series_a, series_b):
+    raw = series_a.tolist() + series_b.tolist()
+    return sorted({str(v).strip() for v in raw
+                   if v is not None and str(v).strip() not in ("", "nan", "None", "NaN")})
+
+
 # ── Sidebar ───────────────────────────────────────────────────────────────────
 
 with st.sidebar:
@@ -125,7 +182,7 @@ if run:
     st.session_state["bytes_a"] = file_a.read()
     st.session_state["bytes_b"] = file_b.read()
 
-# ── Gate: show landing if no data yet ────────────────────────────────────────
+# ── Gate ─────────────────────────────────────────────────────────────────────
 
 if "bytes_a" not in st.session_state or "bytes_b" not in st.session_state:
     st.info("👈  Upload two JiBe PMS CSV exports in the sidebar and click **Run Comparison**.")
@@ -138,7 +195,7 @@ if "bytes_a" not in st.session_state or "bytes_b" not in st.session_state:
         """)
     st.stop()
 
-# ── Parse CSVs from stored bytes (always fresh, no pickle issues) ─────────────
+# ── Parse ─────────────────────────────────────────────────────────────────────
 
 df_a = load_csv(st.session_state["bytes_a"])
 df_b = load_csv(st.session_state["bytes_b"])
@@ -151,12 +208,18 @@ missing_b, missing_a, freq_mismatch = compare(df_a, df_b, vessel_a, vessel_b)
 # ── Summary metrics ───────────────────────────────────────────────────────────
 
 st.subheader("📊 Summary")
-c1, c2, c3, c4, c5 = st.columns(5)
+c1, c2, c3, c4, c5, c6, c7 = st.columns(7)
 c1.metric(f"Total Jobs — {vessel_a}", len(df_a))
 c2.metric(f"Total Jobs — {vessel_b}", len(df_b))
 c3.metric(f"Missing in {vessel_b}", len(missing_b), delta=f"-{len(missing_b)}", delta_color="inverse")
 c4.metric(f"Missing in {vessel_a}", len(missing_a), delta=f"-{len(missing_a)}", delta_color="inverse")
-c5.metric("Frequency Mismatches", len(freq_mismatch), delta=f"{len(freq_mismatch)}", delta_color="inverse")
+c5.metric("Freq Mismatches", len(freq_mismatch), delta=f"{len(freq_mismatch)}", delta_color="inverse")
+
+# Critical gap metrics
+crit_b = int((missing_b["Critical"] == "C").sum()) if "Critical" in missing_b.columns else 0
+crit_a = int((missing_a["Critical"] == "C").sum()) if "Critical" in missing_a.columns else 0
+c6.metric(f"Critical Missing in {vessel_b}", crit_b, delta=f"-{crit_b}" if crit_b else "0", delta_color="inverse")
+c7.metric(f"Critical Missing in {vessel_a}", crit_a, delta=f"-{crit_a}" if crit_a else "0", delta_color="inverse")
 
 st.divider()
 
@@ -164,16 +227,9 @@ st.divider()
 
 with st.expander("🔧 Filter Results", expanded=False):
     col1, col2, col3, col4 = st.columns(4)
-
-    def clean_opts(series_a, series_b):
-        raw = series_a.tolist() + series_b.tolist()
-        return sorted({str(v).strip() for v in raw
-                       if v is not None and str(v).strip() not in ("", "nan", "None", "NaN")})
-
     all_dept      = clean_opts(df_a["Department"],         df_b["Department"])
     all_fn        = clean_opts(df_a["Function"],           df_b["Function"])
     all_machinery = clean_opts(df_a["Machinery Location"], df_b["Machinery Location"])
-
     with col1:
         dept_filter = st.multiselect("Department", options=all_dept)
     with col2:
@@ -187,34 +243,196 @@ mb = apply_filters(missing_b,     dept_filter, fn_filter, machinery_filter, crit
 ma = apply_filters(missing_a,     dept_filter, fn_filter, machinery_filter, critical_only)
 fm = apply_filters(freq_mismatch, dept_filter, fn_filter, machinery_filter, critical_only)
 
-# ── Results tabs ──────────────────────────────────────────────────────────────
+# ── Tabs ──────────────────────────────────────────────────────────────────────
 
-tab1, tab2, tab3 = st.tabs([
+tab1, tab2, tab3, tab4, tab5 = st.tabs([
     f"❌ Missing in {vessel_b} ({len(mb)})",
     f"❌ Missing in {vessel_a} ({len(ma)})",
-    f"⚠️ Frequency Mismatches ({len(fm)})"
+    f"⚠️ Frequency Mismatches ({len(fm)})",
+    "📊 Department Gap Analysis",
+    "📈 Frequency Distribution",
 ])
+
+# ── Tab 1: Missing in Vessel B ────────────────────────────────────────────────
 
 with tab1:
     st.markdown(f"Jobs present in **{vessel_a}** but **not found** in **{vessel_b}**.")
+    st.caption("🔴 Red rows = Critical jobs (C flag)")
     if mb.empty:
         st.success("No missing jobs found.")
     else:
-        st.dataframe(mb.reset_index(drop=True), use_container_width=True, height=450)
+        st.dataframe(style_missing(mb.reset_index(drop=True)), use_container_width=True, height=450)
+
+# ── Tab 2: Missing in Vessel A ────────────────────────────────────────────────
 
 with tab2:
     st.markdown(f"Jobs present in **{vessel_b}** but **not found** in **{vessel_a}**.")
+    st.caption("🔴 Red rows = Critical jobs (C flag)")
     if ma.empty:
         st.success("No missing jobs found.")
     else:
-        st.dataframe(ma.reset_index(drop=True), use_container_width=True, height=450)
+        st.dataframe(style_missing(ma.reset_index(drop=True)), use_container_width=True, height=450)
+
+# ── Tab 3: Frequency Mismatches ───────────────────────────────────────────────
 
 with tab3:
-    st.markdown(f"Jobs that exist in **both** vessels but have **different maintenance frequencies**.")
+    st.markdown(f"Jobs in **both** vessels with **different maintenance frequencies**.")
+    st.caption("🟡 Amber cells = frequency columns  |  🔴 Red rows = Critical jobs")
     if fm.empty:
         st.success("No frequency mismatches found.")
     else:
-        st.dataframe(fm.reset_index(drop=True), use_container_width=True, height=450)
+        st.dataframe(
+            style_freq_mismatch(fm.reset_index(drop=True), vessel_a, vessel_b),
+            use_container_width=True,
+            height=450
+        )
+
+# ── Tab 4: Department Gap Analysis ───────────────────────────────────────────
+
+with tab4:
+    st.markdown("### Department-wise Gap Summary")
+    st.markdown("How gaps and critical missing jobs are distributed across Engine and Deck departments.")
+
+    def dept_summary(df_missing, vessel_missing_from, label):
+        if "Department" not in df_missing.columns or df_missing.empty:
+            return pd.DataFrame()
+        grp = df_missing.groupby("Department").agg(
+            Total=("Job Code", "count"),
+            Critical=("Critical", lambda x: (x == "C").sum())
+        ).reset_index()
+        grp["Non-Critical"] = grp["Total"] - grp["Critical"]
+        grp["Missing From"] = vessel_missing_from
+        grp["Label"] = label
+        return grp
+
+    dept_b = dept_summary(mb, vessel_b, f"Missing in {vessel_b}")
+    dept_a = dept_summary(ma, vessel_a, f"Missing in {vessel_a}")
+    dept_all = pd.concat([dept_b, dept_a], ignore_index=True)
+
+    if dept_all.empty:
+        st.success("No gaps to display after filters.")
+    else:
+        col_left, col_right = st.columns(2)
+
+        with col_left:
+            st.markdown(f"#### Missing in {vessel_b}")
+            if dept_b.empty:
+                st.success("No missing jobs.")
+            else:
+                fig = go.Figure()
+                fig.add_bar(
+                    x=dept_b["Department"], y=dept_b["Critical"],
+                    name="Critical", marker_color="#d9534f"
+                )
+                fig.add_bar(
+                    x=dept_b["Department"], y=dept_b["Non-Critical"],
+                    name="Non-Critical", marker_color="#5bc0de"
+                )
+                fig.update_layout(
+                    barmode="stack", height=350,
+                    xaxis_title="Department", yaxis_title="Number of Jobs",
+                    legend=dict(orientation="h", yanchor="bottom", y=1.02),
+                    margin=dict(t=30, b=40)
+                )
+                st.plotly_chart(fig, use_container_width=True)
+                st.dataframe(dept_b[["Department","Critical","Non-Critical","Total"]].reset_index(drop=True),
+                             use_container_width=True, hide_index=True)
+
+        with col_right:
+            st.markdown(f"#### Missing in {vessel_a}")
+            if dept_a.empty:
+                st.success("No missing jobs.")
+            else:
+                fig2 = go.Figure()
+                fig2.add_bar(
+                    x=dept_a["Department"], y=dept_a["Critical"],
+                    name="Critical", marker_color="#d9534f"
+                )
+                fig2.add_bar(
+                    x=dept_a["Department"], y=dept_a["Non-Critical"],
+                    name="Non-Critical", marker_color="#5bc0de"
+                )
+                fig2.update_layout(
+                    barmode="stack", height=350,
+                    xaxis_title="Department", yaxis_title="Number of Jobs",
+                    legend=dict(orientation="h", yanchor="bottom", y=1.02),
+                    margin=dict(t=30, b=40)
+                )
+                st.plotly_chart(fig2, use_container_width=True)
+                st.dataframe(dept_a[["Department","Critical","Non-Critical","Total"]].reset_index(drop=True),
+                             use_container_width=True, hide_index=True)
+
+# ── Tab 5: Frequency Distribution ────────────────────────────────────────────
+
+with tab5:
+    st.markdown("### Frequency Distribution Comparison")
+    st.markdown("How maintenance intervals are spread across both vessels. Differences highlight workload imbalance.")
+
+    def freq_dist(df, vessel_name):
+        if "Frequency" not in df.columns:
+            return pd.DataFrame()
+        counts = df["Frequency"].value_counts().reset_index()
+        counts.columns = ["Frequency", "Count"]
+        counts["Vessel"] = vessel_name
+        counts["_sort"] = counts["Frequency"].apply(freq_sort_key)
+        counts = counts.sort_values("_sort").drop(columns="_sort")
+        return counts
+
+    dist_a = freq_dist(df_a, vessel_a)
+    dist_b = freq_dist(df_b, vessel_b)
+    dist_all = pd.concat([dist_a, dist_b], ignore_index=True)
+
+    if dist_all.empty:
+        st.info("No frequency data available.")
+    else:
+        # Sort x-axis by frequency value
+        freq_order = (
+            dist_all.assign(_s=dist_all["Frequency"].apply(freq_sort_key))
+            .drop_duplicates("Frequency")
+            .sort_values("_s")["Frequency"]
+            .tolist()
+        )
+
+        fig3 = px.bar(
+            dist_all, x="Frequency", y="Count", color="Vessel",
+            barmode="group",
+            category_orders={"Frequency": freq_order},
+            color_discrete_map={vessel_a: "#0066cc", vessel_b: "#ff7700"},
+            labels={"Count": "Number of Jobs", "Frequency": "Maintenance Interval"},
+            height=450
+        )
+        fig3.update_layout(
+            legend=dict(orientation="h", yanchor="bottom", y=1.02),
+            xaxis_tickangle=-45,
+            margin=dict(t=40, b=100)
+        )
+        st.plotly_chart(fig3, use_container_width=True)
+
+        st.markdown("#### Intervals present in one vessel but not the other")
+        freqs_a = set(dist_a["Frequency"].tolist())
+        freqs_b = set(dist_b["Frequency"].tolist())
+        only_a = freqs_a - freqs_b
+        only_b = freqs_b - freqs_a
+
+        ca, cb = st.columns(2)
+        with ca:
+            st.markdown(f"**Only in {vessel_a}**")
+            if only_a:
+                st.dataframe(
+                    dist_a[dist_a["Frequency"].isin(only_a)][["Frequency","Count"]].reset_index(drop=True),
+                    use_container_width=True, hide_index=True
+                )
+            else:
+                st.success("None")
+        with cb:
+            st.markdown(f"**Only in {vessel_b}**")
+            if only_b:
+                st.dataframe(
+                    dist_b[dist_b["Frequency"].isin(only_b)][["Frequency","Count"]].reset_index(drop=True),
+                    use_container_width=True, hide_index=True
+                )
+            else:
+                st.success("None")
 
 # ── Download ──────────────────────────────────────────────────────────────────
 
