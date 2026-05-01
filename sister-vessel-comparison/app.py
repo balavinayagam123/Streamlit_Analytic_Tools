@@ -14,32 +14,28 @@ st.markdown("Upload JiBe PMS exports for two sister vessels to identify missing 
 # ── helpers ──────────────────────────────────────────────────────────────────
 
 def load_csv(uploaded_file):
-    """Read JiBe CSV and rename unnamed columns."""
     df = pd.read_csv(uploaded_file, header=0, dtype=str)
-
-    # Column 1 (index 1) = Critical flag
     cols = df.columns.tolist()
     cols[1] = "Critical"
-    # Column 2 is always empty in JiBe exports — drop it
     df.columns = cols
     if "Unnamed: 2" in df.columns:
         df = df.drop(columns=["Unnamed: 2"])
-
-    # Normalise key text columns (whitespace only — no value changes)
     for col in ["Job Code", "Machinery Location", "Sub Component Location",
-                "Frequency", "Job Action", "Title", "Function", "Department"]:
+                "Frequency", "Job Action", "Title", "Function", "Department", "Vessel"]:
         if col in df.columns:
             df[col] = df[col].astype(str).str.strip()
-
     return df
 
 
-def compare(df_a, df_b, vessel_a, vessel_b):
-    """Return three DataFrames: missing_in_b, missing_in_a, freq_mismatches."""
+def get_vessel_name(df):
+    if "Vessel" in df.columns:
+        names = [n for n in df["Vessel"].dropna().unique() if n not in ("", "nan")]
+        if names:
+            return names[0]
+    return "Vessel"
 
-    # Composite key: Job Code + Machinery Location + Sub Component Location + Title
-    # Job Code alone is NOT unique — same code applies to many machinery items
-    # Title further differentiates repeated physical instances (e.g. multiple watertight doors)
+
+def compare(df_a, df_b, vessel_a, vessel_b):
     KEY = ["Job Code", "Machinery Location", "Sub Component Location", "Title"]
 
     def make_key(df):
@@ -53,7 +49,6 @@ def compare(df_a, df_b, vessel_a, vessel_b):
     set_a = set(df_a["_key"])
     set_b = set(df_b["_key"])
 
-    # ── Missing jobs ──────────────────────────────────────────────────────────
     cols_show = ["Job Code", "Critical", "Machinery Location", "Sub Component Location",
                  "Frequency", "Job Action", "Title", "Function", "Department"]
 
@@ -65,9 +60,7 @@ def compare(df_a, df_b, vessel_a, vessel_b):
         [c for c in cols_show if c in df_b.columns]
     ].copy()
 
-    # ── Frequency mismatches (jobs present in both, different frequency) ──────
     common_keys = set_a & set_b
-
     merged = pd.merge(
         df_a[df_a["_key"].isin(common_keys)][
             ["_key", "Job Code", "Critical", "Machinery Location",
@@ -93,7 +86,6 @@ def compare(df_a, df_b, vessel_a, vessel_b):
 
 
 def to_excel(dfs: dict) -> bytes:
-    """Write multiple DataFrames to an in-memory Excel workbook."""
     buf = io.BytesIO()
     with pd.ExcelWriter(buf, engine="openpyxl") as writer:
         for sheet_name, df in dfs.items():
@@ -101,27 +93,34 @@ def to_excel(dfs: dict) -> bytes:
     return buf.getvalue()
 
 
-# ── Sidebar — file upload ─────────────────────────────────────────────────────
+def apply_filters(df, dept_filter, fn_filter, machinery_filter, critical_only):
+    if dept_filter and "Department" in df.columns:
+        df = df[df["Department"].isin(dept_filter)]
+    if fn_filter and "Function" in df.columns:
+        df = df[df["Function"].isin(fn_filter)]
+    if machinery_filter and "Machinery Location" in df.columns:
+        df = df[df["Machinery Location"].isin(machinery_filter)]
+    if critical_only and "Critical" in df.columns:
+        df = df[df["Critical"] == "C"]
+    return df
+
+
+# ── Sidebar — file upload only ────────────────────────────────────────────────
 
 with st.sidebar:
     st.header("📂 Upload PMS Exports")
     st.markdown("Export pending jobs from JiBe for each vessel and upload the CSV files below.")
 
     file_a = st.file_uploader("Vessel A — CSV", type=["csv"], key="vessel_a")
-    vessel_a_name = st.text_input("Vessel A Name", value="Vessel A")
-
     st.divider()
-
     file_b = st.file_uploader("Vessel B — CSV", type=["csv"], key="vessel_b")
-    vessel_b_name = st.text_input("Vessel B Name", value="Vessel B")
-
+    st.divider()
     run = st.button("🔍 Run Comparison", type="primary", use_container_width=True)
 
 # ── Main panel ────────────────────────────────────────────────────────────────
 
-if not run:
+if not run and "results" not in st.session_state:
     st.info("👈  Upload two JiBe PMS CSV exports in the sidebar and click **Run Comparison**.")
-
     with st.expander("ℹ️  How to export from JiBe"):
         st.markdown("""
 1. In JiBe, go to **Planned Maintenance → Jobs**
@@ -131,79 +130,104 @@ if not run:
         """)
     st.stop()
 
-if not file_a or not file_b:
-    st.warning("Please upload CSV files for **both** vessels before running.")
-    st.stop()
+# ── Run comparison and store in session state ─────────────────────────────────
 
-# ── Load & compare ────────────────────────────────────────────────────────────
+if run:
+    if not file_a or not file_b:
+        st.warning("Please upload CSV files for **both** vessels before running.")
+        st.stop()
 
-with st.spinner("Comparing PMS data…"):
-    df_a = load_csv(file_a)
-    df_b = load_csv(file_b)
+    with st.spinner("Comparing PMS data…"):
+        df_a = load_csv(file_a)
+        df_b = load_csv(file_b)
 
-    missing_b, missing_a, freq_mismatch = compare(df_a, df_b, vessel_a_name, vessel_b_name)
+        vessel_a_name = get_vessel_name(df_a)
+        vessel_b_name = get_vessel_name(df_b)
+
+        missing_b, missing_a, freq_mismatch = compare(df_a, df_b, vessel_a_name, vessel_b_name)
+
+        st.session_state["results"] = {
+            "df_a": df_a,
+            "df_b": df_b,
+            "vessel_a": vessel_a_name,
+            "vessel_b": vessel_b_name,
+            "missing_b": missing_b,
+            "missing_a": missing_a,
+            "freq_mismatch": freq_mismatch,
+        }
+
+# ── Retrieve results from session state ──────────────────────────────────────
+
+r             = st.session_state["results"]
+df_a          = r["df_a"]
+df_b          = r["df_b"]
+vessel_a      = r["vessel_a"]
+vessel_b      = r["vessel_b"]
+missing_b     = r["missing_b"]
+missing_a     = r["missing_a"]
+freq_mismatch = r["freq_mismatch"]
 
 # ── Summary metrics ───────────────────────────────────────────────────────────
 
 st.subheader("📊 Summary")
 c1, c2, c3, c4, c5 = st.columns(5)
-c1.metric(f"Total Jobs — {vessel_a_name}", len(df_a))
-c2.metric(f"Total Jobs — {vessel_b_name}", len(df_b))
-c3.metric(f"Missing in {vessel_b_name}", len(missing_b), delta=f"-{len(missing_b)}", delta_color="inverse")
-c4.metric(f"Missing in {vessel_a_name}", len(missing_a), delta=f"-{len(missing_a)}", delta_color="inverse")
+c1.metric(f"Total Jobs — {vessel_a}", len(df_a))
+c2.metric(f"Total Jobs — {vessel_b}", len(df_b))
+c3.metric(f"Missing in {vessel_b}", len(missing_b), delta=f"-{len(missing_b)}", delta_color="inverse")
+c4.metric(f"Missing in {vessel_a}", len(missing_a), delta=f"-{len(missing_a)}", delta_color="inverse")
 c5.metric("Frequency Mismatches", len(freq_mismatch), delta=f"{len(freq_mismatch)}", delta_color="inverse")
 
 st.divider()
 
-# ── Filters ───────────────────────────────────────────────────────────────────
+# ── Filters — live, update instantly without re-running comparison ─────────────
 
 with st.expander("🔧 Filter Results", expanded=False):
-    col1, col2, col3 = st.columns(3)
+    col1, col2, col3, col4 = st.columns(4)
+
+    all_dept = sorted(
+        {v for v in df_a["Department"].tolist() + df_b["Department"].tolist()
+         if v not in ("", "nan", "None")}
+    )
+    all_fn = sorted(
+        {v for v in df_a["Function"].tolist() + df_b["Function"].tolist()
+         if v not in ("", "nan", "None")}
+    )
+    all_machinery = sorted(
+        {v for v in df_a["Machinery Location"].tolist() + df_b["Machinery Location"].tolist()
+         if v not in ("", "nan", "None")}
+    )
+
     with col1:
-        dept_filter = st.multiselect(
-            "Department",
-            options=sorted(set(df_a["Department"].dropna().unique()) |
-                           set(df_b["Department"].dropna().unique()))
-        )
+        dept_filter = st.multiselect("Department", options=all_dept)
     with col2:
-        fn_options = sorted(set(df_a["Function"].dropna().unique()) |
-                            set(df_b["Function"].dropna().unique()))
-        fn_filter = st.multiselect("Function", options=fn_options)
+        fn_filter = st.multiselect("Function", options=all_fn)
     with col3:
+        machinery_filter = st.multiselect("Machinery Location", options=all_machinery)
+    with col4:
         critical_only = st.checkbox("Critical jobs only (C flag)")
 
-
-def apply_filters(df):
-    if dept_filter and "Department" in df.columns:
-        df = df[df["Department"].isin(dept_filter)]
-    if fn_filter and "Function" in df.columns:
-        df = df[df["Function"].isin(fn_filter)]
-    if critical_only and "Critical" in df.columns:
-        df = df[df["Critical"] == "C"]
-    return df
-
-
-mb = apply_filters(missing_b)
-ma = apply_filters(missing_a)
-fm = apply_filters(freq_mismatch)
+# Apply filters live
+mb = apply_filters(missing_b,     dept_filter, fn_filter, machinery_filter, critical_only)
+ma = apply_filters(missing_a,     dept_filter, fn_filter, machinery_filter, critical_only)
+fm = apply_filters(freq_mismatch, dept_filter, fn_filter, machinery_filter, critical_only)
 
 # ── Results tabs ──────────────────────────────────────────────────────────────
 
 tab1, tab2, tab3 = st.tabs([
-    f"❌ Missing in {vessel_b_name} ({len(mb)})",
-    f"❌ Missing in {vessel_a_name} ({len(ma)})",
+    f"❌ Missing in {vessel_b} ({len(mb)})",
+    f"❌ Missing in {vessel_a} ({len(ma)})",
     f"⚠️ Frequency Mismatches ({len(fm)})"
 ])
 
 with tab1:
-    st.markdown(f"Jobs present in **{vessel_a_name}** but **not found** in **{vessel_b_name}**.")
+    st.markdown(f"Jobs present in **{vessel_a}** but **not found** in **{vessel_b}**.")
     if mb.empty:
         st.success("No missing jobs found.")
     else:
         st.dataframe(mb.reset_index(drop=True), use_container_width=True, height=450)
 
 with tab2:
-    st.markdown(f"Jobs present in **{vessel_b_name}** but **not found** in **{vessel_a_name}**.")
+    st.markdown(f"Jobs present in **{vessel_b}** but **not found** in **{vessel_a}**.")
     if ma.empty:
         st.success("No missing jobs found.")
     else:
@@ -222,15 +246,15 @@ st.divider()
 st.subheader("⬇️ Download Gap Report")
 
 excel_data = to_excel({
-    f"Missing in {vessel_b_name}"[:31]: missing_b,
-    f"Missing in {vessel_a_name}"[:31]: missing_a,
+    f"Missing in {vessel_b}"[:31]: missing_b,
+    f"Missing in {vessel_a}"[:31]: missing_a,
     "Frequency Mismatches": freq_mismatch
 })
 
 st.download_button(
     label="📥 Download Full Report (.xlsx)",
     data=excel_data,
-    file_name=f"PMS_Comparison_{vessel_a_name}_vs_{vessel_b_name}.xlsx",
+    file_name=f"PMS_Comparison_{vessel_a}_vs_{vessel_b}.xlsx",
     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     type="primary"
 )
