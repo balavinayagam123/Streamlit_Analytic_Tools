@@ -1,56 +1,1474 @@
 [
-  {"variant": "Accommodation LadderPort1", "canonical": "Accommodation Ladder"},
-  {"variant": "Accommodation LadderStarboard1", "canonical": "Accommodation Ladder"},
-  {"variant": "Accommodation LadderPort ", "canonical": "Accommodation Ladder"},
-  {"variant": "Accommodation LadderStarboard ", "canonical": "Accommodation Ladder"},
-  {"variant": "AnchorPort1", "canonical": "Anchor"},
-  {"variant": "AnchorStarboard1", "canonical": "Anchor"},
-  {"variant": "Anchor Chain CablePort1", "canonical": "Anchor Chain Cable"},
-  {"variant": "Anchor Chain CableStarboard1", "canonical": "Anchor Chain Cable"},
-  {"variant": "Auxiliary Engine#1", "canonical": "Auxiliary Engine"},
-  {"variant": "Auxiliary Engine#2", "canonical": "Auxiliary Engine"},
-  {"variant": "Auxiliary Engine#3", "canonical": "Auxiliary Engine"},
-  {"variant": "Auxiliary Engine#4", "canonical": "Auxiliary Engine"},
-  {"variant": "Ballast Water Treatment Plant#1", "canonical": "Ballast Water Treatment Plant"},
-  {"variant": "Bilge WellAft ", "canonical": "Bilge Well"},
-  {"variant": "Bilge WellAft-Port ", "canonical": "Bilge Well"},
-  {"variant": "Bilge WellAft-Stbd ", "canonical": "Bilge Well"},
-  {"variant": "Bilge WellCentre1", "canonical": "Bilge Well"},
-  {"variant": "Bilge WellFwd-Port ", "canonical": "Bilge Well"},
-  {"variant": "Bilge WellFwd-Stbd ", "canonical": "Bilge Well"},
-  {"variant": "Bilge WellPort1", "canonical": "Bilge Well"},
-  {"variant": "Bilge WellStarboard1", "canonical": "Bilge Well"},
-  {"variant": "Boiler#1", "canonical": "Boiler"},
-  {"variant": "BoilerRear", "canonical": "Boiler"},
-  {"variant": "Bunker DavitPort1", "canonical": "Bunker Davit"},
-  {"variant": "Bunker DavitStarboard1", "canonical": "Bunker Davit"},
-  {"variant": "CO2 Fixed Fire Fighting System#1", "canonical": "CO2 Fixed Fire Fighting System"},
-  {"variant": "Combined Windlass Mooring WinchFwd-Port1", "canonical": "Combined Windlass Mooring Winch"},
-  {"variant": "Combined Windlass Mooring WinchFwd-Stbd1", "canonical": "Combined Windlass Mooring Winch"},
-  {"variant": "ECDIS#1", "canonical": "ECDIS"},
-  {"variant": "ECDIS#2", "canonical": "ECDIS"},
-  {"variant": "Emergency Fire Pump#1", "canonical": "Emergency Fire Pump"},
-  {"variant": "Emergency Generator#1", "canonical": "Emergency Generator"},
-  {"variant": "Emergency Generator Battery#1", "canonical": "Emergency Generator Battery"},
-  {"variant": "Fire Detection and Alarm System#1", "canonical": "Fire Detection and Alarm System"},
-  {"variant": "Fire Protection System#1", "canonical": "Fire Protection System"},
-  {"variant": "Gyro Compass#1", "canonical": "Gyro Compass"},
-  {"variant": "Inert Gas Generating Plant#1", "canonical": "Inert Gas Plant"},
-  {"variant": "LifeboatStarboard1", "canonical": "Lifeboat"},
-  {"variant": "Lifeboat DavitStarboard1", "canonical": "Lifeboat Davit"},
-  {"variant": "Lifeboat/Rescue BoatPort1", "canonical": "Rescue Boat"},
-  {"variant": "Load Line Items#1", "canonical": "Load Line Items"},
-  {"variant": "Main Engine - ME-C II#1", "canonical": "Main Engine"},
-  {"variant": "Mooring WinchAft-Port1", "canonical": "Mooring Winch"},
-  {"variant": "Mooring WinchAft-Stbd1", "canonical": "Mooring Winch"},
-  {"variant": "Mooring WinchCentre1", "canonical": "Mooring Winch"},
-  {"variant": "Oily Water Separator#1", "canonical": "Oily Water Separator"},
-  {"variant": "ODME#1", "canonical": "ODME"},
-  {"variant": "SSAS#1", "canonical": "SSAS"},
-  {"variant": "SSAS#2", "canonical": "SSAS"},
-  {"variant": "SART#1", "canonical": "SART"},
-  {"variant": "SART#2", "canonical": "SART"},
-  {"variant": "Steering Gear#1", "canonical": "Steering Gear"},
-  {"variant": "VHF Radio Telephone#1", "canonical": "VHF Radio Telephone"},
-  {"variant": "VHF Radio Telephone#2", "canonical": "VHF Radio Telephone"}
+  {
+    "variant": "Accommodation AC Plant # 1",
+    "canonical": "Accommodation AC Plant"
+  },
+  {
+    "variant": "Accommodation LadderP",
+    "canonical": "Accommodation Ladder"
+  },
+  {
+    "variant": "Accommodation LadderPort",
+    "canonical": "Accommodation Ladder"
+  },
+  {
+    "variant": "Accommodation LadderPort1",
+    "canonical": "Accommodation Ladder"
+  },
+  {
+    "variant": "Accommodation LadderPortnull",
+    "canonical": "Accommodation Ladder"
+  },
+  {
+    "variant": "Accommodation LadderS",
+    "canonical": "Accommodation Ladder"
+  },
+  {
+    "variant": "Accommodation LadderStarboard",
+    "canonical": "Accommodation Ladder"
+  },
+  {
+    "variant": "Accommodation LadderStarboard1",
+    "canonical": "Accommodation Ladder"
+  },
+  {
+    "variant": "Accommodation LadderStarboardnull",
+    "canonical": "Accommodation Ladder"
+  },
+  {
+    "variant": "AE DO Supply Pump#1",
+    "canonical": "AE DO Supply Pump"
+  },
+  {
+    "variant": "AE DO Supply Pump#2",
+    "canonical": "AE DO Supply Pump"
+  },
+  {
+    "variant": "AE FO Auto Backwash Filter#1",
+    "canonical": "AE FO Auto Backwash Filter"
+  },
+  {
+    "variant": "AE FO Auto Backwash Filter#2",
+    "canonical": "AE FO Auto Backwash Filter"
+  },
+  {
+    "variant": "AE FO Heater",
+    "canonical": "FO Heater"
+  },
+  {
+    "variant": "AE FO Heater#1",
+    "canonical": "FO Heater"
+  },
+  {
+    "variant": "AE JCFW Cooler#1",
+    "canonical": "HT Cooler"
+  },
+  {
+    "variant": "AE LO Purifier",
+    "canonical": "LO Purifier"
+  },
+  {
+    "variant": "AE LO Purifier Feed Pump",
+    "canonical": "AE LO Purifier Feed Pump"
+  },
+  {
+    "variant": "Air HornAft1",
+    "canonical": "Air Horn"
+  },
+  {
+    "variant": "AISNo1",
+    "canonical": "AIS"
+  },
+  {
+    "variant": "AISNo2",
+    "canonical": "AIS"
+  },
+  {
+    "variant": "Anchor Chain CableP",
+    "canonical": "Anchor Chain Cable"
+  },
+  {
+    "variant": "Anchor Chain CablePort",
+    "canonical": "Anchor Chain Cable"
+  },
+  {
+    "variant": "Anchor Chain CablePort1",
+    "canonical": "Anchor Chain Cable"
+  },
+  {
+    "variant": "Anchor Chain CableS",
+    "canonical": "Anchor Chain Cable"
+  },
+  {
+    "variant": "Anchor Chain CableStarboard",
+    "canonical": "Anchor Chain Cable"
+  },
+  {
+    "variant": "AnchorP",
+    "canonical": "Anchor"
+  },
+  {
+    "variant": "AnchorPort",
+    "canonical": "Anchor"
+  },
+  {
+    "variant": "AnchorPort1",
+    "canonical": "Anchor"
+  },
+  {
+    "variant": "AnchorS",
+    "canonical": "Anchor"
+  },
+  {
+    "variant": "AnchorStarboard",
+    "canonical": "Anchor"
+  },
+  {
+    "variant": "AnchorStarboard1",
+    "canonical": "Anchor"
+  },
+  {
+    "variant": "Auxiliary Air Reservoir",
+    "canonical": "Other Reservoirs"
+  },
+  {
+    "variant": "Auxiliary Engine#1",
+    "canonical": "Auxiliary Engine"
+  },
+  {
+    "variant": "Auxiliary Engine#2",
+    "canonical": "Auxiliary Engine"
+  },
+  {
+    "variant": "Auxiliary Engine#3",
+    "canonical": "Auxiliary Engine"
+  },
+  {
+    "variant": "Auxiliary Engine#4",
+    "canonical": "Auxiliary Engine"
+  },
+  {
+    "variant": "Auxiliary EngineNo1",
+    "canonical": "Auxiliary Engine"
+  },
+  {
+    "variant": "Auxiliary EngineNo2",
+    "canonical": "Auxiliary Engine"
+  },
+  {
+    "variant": "Auxiliary EngineNo3",
+    "canonical": "Auxiliary Engine"
+  },
+  {
+    "variant": "Auxiliary EngineNo4",
+    "canonical": "Auxiliary Engine"
+  },
+  {
+    "variant": "Ballast PumpNo1",
+    "canonical": "Ballast Pump"
+  },
+  {
+    "variant": "Ballast PumpNo2",
+    "canonical": "Ballast Pump"
+  },
+  {
+    "variant": "Ballast Water Treatment Plant#1",
+    "canonical": "Ballast Water Treatment Plant#1"
+  },
+  {
+    "variant": "Bilge Circulating Pump",
+    "canonical": "Bilge Pump"
+  },
+  {
+    "variant": "Bilge WellAft",
+    "canonical": "Bilge Well"
+  },
+  {
+    "variant": "Bilge WellAft-Port",
+    "canonical": "Bilge Well"
+  },
+  {
+    "variant": "Bilge WellAft-Stbd",
+    "canonical": "Bilge Well"
+  },
+  {
+    "variant": "Bilge WellCentre1",
+    "canonical": "Bilge Well"
+  },
+  {
+    "variant": "Bilge WellFwd-Port",
+    "canonical": "Bilge Well"
+  },
+  {
+    "variant": "Bilge WellFwd-Stbd",
+    "canonical": "Bilge Well"
+  },
+  {
+    "variant": "Bilge WellPort1",
+    "canonical": "Bilge Well"
+  },
+  {
+    "variant": "Bilge WellStarboard1",
+    "canonical": "Bilge Well"
+  },
+  {
+    "variant": "Bilge, Fire and GS Pump",
+    "canonical": "Fire and GS Pump"
+  },
+  {
+    "variant": "Boiler Feed Water Pump # 1",
+    "canonical": "Boiler Feed Water Pump"
+  },
+  {
+    "variant": "Boiler Feed Water Pump # 2",
+    "canonical": "Boiler Feed Water Pump"
+  },
+  {
+    "variant": "BoilerRear",
+    "canonical": "Boiler"
+  },
+  {
+    "variant": "Bunker Davit P 1",
+    "canonical": "Bunker Davit"
+  },
+  {
+    "variant": "Bunker Davit S 1",
+    "canonical": "Bunker Davit"
+  },
+  {
+    "variant": "Bunker DavitP",
+    "canonical": "Bunker Davit"
+  },
+  {
+    "variant": "Bunker DavitPort",
+    "canonical": "Bunker Davit"
+  },
+  {
+    "variant": "Bunker DavitPort1",
+    "canonical": "Bunker Davit"
+  },
+  {
+    "variant": "Bunker DavitS",
+    "canonical": "Bunker Davit"
+  },
+  {
+    "variant": "Bunker DavitStarboard",
+    "canonical": "Bunker Davit"
+  },
+  {
+    "variant": "Bunker DavitStarboard1",
+    "canonical": "Bunker Davit"
+  },
+  {
+    "variant": "Calorifier # 1",
+    "canonical": "Calorifier"
+  },
+  {
+    "variant": "Cargo Booster Pump#1",
+    "canonical": "Cargo Pump"
+  },
+  {
+    "variant": "Cargo Booster Pump#2",
+    "canonical": "Cargo Pump"
+  },
+  {
+    "variant": "Cargo Deep Well Pump # 1",
+    "canonical": "Cargo Pump"
+  },
+  {
+    "variant": "Cargo Deep Well Pump # 2",
+    "canonical": "Cargo Pump"
+  },
+  {
+    "variant": "Cargo Deep Well Pump # 3",
+    "canonical": "Cargo Pump"
+  },
+  {
+    "variant": "Cargo Deep Well Pump # 4",
+    "canonical": "Cargo Pump"
+  },
+  {
+    "variant": "Cargo Deep Well Pump # 5",
+    "canonical": "Cargo Pump"
+  },
+  {
+    "variant": "Cargo Deep Well Pump # 6",
+    "canonical": "Cargo Pump"
+  },
+  {
+    "variant": "Cargo Deep Well Pump # 7",
+    "canonical": "Cargo Pump"
+  },
+  {
+    "variant": "Cargo Deep Well Pump # 8",
+    "canonical": "Cargo Pump"
+  },
+  {
+    "variant": "Cargo Hose Handling CranePort",
+    "canonical": "Cargo Hose Handling Crane"
+  },
+  {
+    "variant": "Cargo Hose Handling CraneStarboard",
+    "canonical": "Cargo Hose Handling Crane"
+  },
+  {
+    "variant": "Central CFW Pump#1",
+    "canonical": "ME JCFW Pump"
+  },
+  {
+    "variant": "Central Cooler#1",
+    "canonical": "HT Cooler"
+  },
+  {
+    "variant": "Central Cooler#2",
+    "canonical": "HT Cooler"
+  },
+  {
+    "variant": "Chain LockerP",
+    "canonical": "Chain Locker"
+  },
+  {
+    "variant": "Chain LockerPort",
+    "canonical": "Chain Locker"
+  },
+  {
+    "variant": "Chain LockerPort1",
+    "canonical": "Chain Locker"
+  },
+  {
+    "variant": "Chain LockerS",
+    "canonical": "Chain Locker"
+  },
+  {
+    "variant": "Chain LockerStarboard",
+    "canonical": "Chain Locker"
+  },
+  {
+    "variant": "Chain LockerStarboard1",
+    "canonical": "Chain Locker"
+  },
+  {
+    "variant": "Clean Ballast Pump#1",
+    "canonical": "Ballast Pump"
+  },
+  {
+    "variant": "Clean Ballast Pump#2",
+    "canonical": "Ballast Pump"
+  },
+  {
+    "variant": "Clear View ScreenPort1",
+    "canonical": "Clear View Screen"
+  },
+  {
+    "variant": "Clear View ScreenStarboard1",
+    "canonical": "Clear View Screen"
+  },
+  {
+    "variant": "Combined Mooring Winch Hydraulic UnitForward",
+    "canonical": "Mooring Winch Hydraulic Unit"
+  },
+  {
+    "variant": "Combined Mooring Winch Hydraulic UnitForward1",
+    "canonical": "Mooring Winch Hydraulic Unit"
+  },
+  {
+    "variant": "Combined Windlass Mooring WinchForward",
+    "canonical": "Combined Windlass Mooring Winch"
+  },
+  {
+    "variant": "Combined Windlass Mooring WinchForward1",
+    "canonical": "Combined Windlass Mooring Winch"
+  },
+  {
+    "variant": "Combined Windlass Mooring WinchForward2",
+    "canonical": "Combined Windlass Mooring Winch"
+  },
+  {
+    "variant": "Combined Windlass Mooring WinchFwd-Port",
+    "canonical": "Combined Windlass Mooring Winch"
+  },
+  {
+    "variant": "Combined Windlass Mooring WinchFwd-Port1",
+    "canonical": "Combined Windlass Mooring Winch"
+  },
+  {
+    "variant": "Combined Windlass Mooring WinchFwd-Stbd",
+    "canonical": "Combined Windlass Mooring Winch"
+  },
+  {
+    "variant": "Combined Windlass Mooring WinchFwd-Stbd1",
+    "canonical": "Combined Windlass Mooring Winch"
+  },
+  {
+    "variant": "Combined Windlass Mooring WinchP",
+    "canonical": "Combined Windlass Mooring Winch"
+  },
+  {
+    "variant": "Combined Windlass Mooring WinchPort",
+    "canonical": "Combined Windlass Mooring Winch"
+  },
+  {
+    "variant": "Combined Windlass Mooring WinchPort1",
+    "canonical": "Combined Windlass Mooring Winch"
+  },
+  {
+    "variant": "Combined Windlass Mooring WinchS",
+    "canonical": "Combined Windlass Mooring Winch"
+  },
+  {
+    "variant": "Combined Windlass Mooring WinchStarboard",
+    "canonical": "Combined Windlass Mooring Winch"
+  },
+  {
+    "variant": "Combined Windlass Mooring WinchStarboard1",
+    "canonical": "Combined Windlass Mooring Winch"
+  },
+  {
+    "variant": "Control Air Dryer",
+    "canonical": "Control Air Dryer"
+  },
+  {
+    "variant": "Control Air Dryer#3",
+    "canonical": "Control Air Dryer"
+  },
+  {
+    "variant": "Control Air Reservoir",
+    "canonical": "Other Reservoirs"
+  },
+  {
+    "variant": "Deck Forward Transformer # 1",
+    "canonical": "Transformer"
+  },
+  {
+    "variant": "Deep Well Pump#1",
+    "canonical": "Cargo Pump"
+  },
+  {
+    "variant": "Deep Well Pump#2",
+    "canonical": "Cargo Pump"
+  },
+  {
+    "variant": "Deep Well Pump#3",
+    "canonical": "Cargo Pump"
+  },
+  {
+    "variant": "Deep Well Pump#4",
+    "canonical": "Cargo Pump"
+  },
+  {
+    "variant": "Deep Well Pump#5",
+    "canonical": "Cargo Pump"
+  },
+  {
+    "variant": "Deep Well Pump#6",
+    "canonical": "Cargo Pump"
+  },
+  {
+    "variant": "Deep Well Pump#7",
+    "canonical": "Cargo Pump"
+  },
+  {
+    "variant": "Deep Well Pump#8",
+    "canonical": "Cargo Pump"
+  },
+  {
+    "variant": "ECDIS#1",
+    "canonical": "ECDIS"
+  },
+  {
+    "variant": "ECDIS#2",
+    "canonical": "ECDIS"
+  },
+  {
+    "variant": "Emergency Towing SystemAft",
+    "canonical": "Emergency Towing System"
+  },
+  {
+    "variant": "Emergency Towing SystemForward",
+    "canonical": "Emergency Towing System"
+  },
+  {
+    "variant": "Emergency Transformer # 1",
+    "canonical": "Emergency Transformer"
+  },
+  {
+    "variant": "EPIRBPort1",
+    "canonical": "EPIRB"
+  },
+  {
+    "variant": "EPIRBStarboard",
+    "canonical": "EPIRB"
+  },
+  {
+    "variant": "ER Bilge Pump",
+    "canonical": "Bilge Pump"
+  },
+  {
+    "variant": "ER Overhead Crane#1",
+    "canonical": "ER Overhead Crane"
+  },
+  {
+    "variant": "Fireman's Outfit#1",
+    "canonical": "Fireman's Outfit"
+  },
+  {
+    "variant": "FO Purifier Heater#1",
+    "canonical": "FO Purifier Heater"
+  },
+  {
+    "variant": "FO Purifier Heater#2",
+    "canonical": "FO Purifier Heater"
+  },
+  {
+    "variant": "Fresh Water Hydrophore System # 1",
+    "canonical": "Fresh Water Hydrophore System"
+  },
+  {
+    "variant": "Gantry Crane#1",
+    "canonical": "Cargo Crane"
+  },
+  {
+    "variant": "Gantry Crane#2",
+    "canonical": "Cargo Crane"
+  },
+  {
+    "variant": "GMDSS Battery # 1",
+    "canonical": "GMDSS Battery"
+  },
+  {
+    "variant": "Hatch CoverAft1",
+    "canonical": "Hatch Cover"
+  },
+  {
+    "variant": "Hatch CoverAft2",
+    "canonical": "Hatch Cover"
+  },
+  {
+    "variant": "Hatch CoverAft3",
+    "canonical": "Hatch Cover"
+  },
+  {
+    "variant": "Hatch CoverAft4",
+    "canonical": "Hatch Cover"
+  },
+  {
+    "variant": "Hatch CoverAft5",
+    "canonical": "Hatch Cover"
+  },
+  {
+    "variant": "Hatch CoverAft6",
+    "canonical": "Hatch Cover"
+  },
+  {
+    "variant": "Hatch CoverAft7",
+    "canonical": "Hatch Cover"
+  },
+  {
+    "variant": "Hatch CoverForward1",
+    "canonical": "Hatch Cover"
+  },
+  {
+    "variant": "Hatch CoverForward2",
+    "canonical": "Hatch Cover"
+  },
+  {
+    "variant": "Hatch CoverForward3",
+    "canonical": "Hatch Cover"
+  },
+  {
+    "variant": "Hatch CoverForward4",
+    "canonical": "Hatch Cover"
+  },
+  {
+    "variant": "Hatch CoverForward5",
+    "canonical": "Hatch Cover"
+  },
+  {
+    "variant": "Hatch CoverForward6",
+    "canonical": "Hatch Cover"
+  },
+  {
+    "variant": "Hatch CoverForward7",
+    "canonical": "Hatch Cover"
+  },
+  {
+    "variant": "Hot Water Circulating Pump # 1",
+    "canonical": "Hot Water Circulating Pump"
+  },
+  {
+    "variant": "ICCPAft",
+    "canonical": "ICCP"
+  },
+  {
+    "variant": "ICCPForward",
+    "canonical": "ICCP"
+  },
+  {
+    "variant": "Inert Gas Generating Plant#1",
+    "canonical": "Inert Gas Plant"
+  },
+  {
+    "variant": "Inmarsat-C MES",
+    "canonical": "Inmarsat-C"
+  },
+  {
+    "variant": "Inmarsat-C MES#1",
+    "canonical": "Inmarsat-C"
+  },
+  {
+    "variant": "Inmarsat-C Ship Earth Station",
+    "canonical": "Inmarsat-C"
+  },
+  {
+    "variant": "Inmarsat-C Ship Earth Station#1",
+    "canonical": "Inmarsat-C"
+  },
+  {
+    "variant": "Lifeboat Battery # 1",
+    "canonical": "Lifeboat Battery"
+  },
+  {
+    "variant": "Lifeboat DavitAft",
+    "canonical": "Lifeboat Davit"
+  },
+  {
+    "variant": "Lifeboat DavitAft1",
+    "canonical": "Lifeboat Davit"
+  },
+  {
+    "variant": "Lifeboat DavitPort",
+    "canonical": "Lifeboat Davit"
+  },
+  {
+    "variant": "Lifeboat DavitPort1",
+    "canonical": "Lifeboat Davit"
+  },
+  {
+    "variant": "Lifeboat DavitStarboard",
+    "canonical": "Lifeboat Davit"
+  },
+  {
+    "variant": "Lifeboat DavitStarboard1",
+    "canonical": "Lifeboat Davit"
+  },
+  {
+    "variant": "Lifeboat/Rescue BoatPort",
+    "canonical": "Lifeboat/Rescue Boat"
+  },
+  {
+    "variant": "Lifeboat/Rescue BoatPort1",
+    "canonical": "Rescue Boat"
+  },
+  {
+    "variant": "Lifeboat/Rescue BoatStarboard",
+    "canonical": "Lifeboat"
+  },
+  {
+    "variant": "Lifeboat/Rescue BoatStarboard1",
+    "canonical": "Rescue Boat"
+  },
+  {
+    "variant": "LifeboatAft",
+    "canonical": "Lifeboat"
+  },
+  {
+    "variant": "LifeboatAft1",
+    "canonical": "Lifeboat"
+  },
+  {
+    "variant": "LifeboatForward",
+    "canonical": "Lifeboat"
+  },
+  {
+    "variant": "LifeboatPort",
+    "canonical": "Lifeboat"
+  },
+  {
+    "variant": "LifeboatPort1",
+    "canonical": "Lifeboat"
+  },
+  {
+    "variant": "LifeboatStarboard",
+    "canonical": "Lifeboat"
+  },
+  {
+    "variant": "LifeboatStarboard1",
+    "canonical": "Lifeboat"
+  },
+  {
+    "variant": "Liferaft 15 PersonPort",
+    "canonical": "Liferaft"
+  },
+  {
+    "variant": "Liferaft 15 PersonPort1",
+    "canonical": "Liferaft"
+  },
+  {
+    "variant": "Liferaft 15 PersonPort2",
+    "canonical": "Liferaft"
+  },
+  {
+    "variant": "Liferaft 15 PersonStarboard",
+    "canonical": "Liferaft"
+  },
+  {
+    "variant": "Liferaft 16 PersonNo2",
+    "canonical": "Liferaft"
+  },
+  {
+    "variant": "Liferaft 16 PersonNo3",
+    "canonical": "Liferaft"
+  },
+  {
+    "variant": "Liferaft 16 PersonPort1",
+    "canonical": "Liferaft"
+  },
+  {
+    "variant": "Liferaft 16 PersonPort2",
+    "canonical": "Liferaft"
+  },
+  {
+    "variant": "Liferaft 16 PersonStarboard1",
+    "canonical": "Liferaft"
+  },
+  {
+    "variant": "Liferaft 16 PersonStarboard2",
+    "canonical": "Liferaft"
+  },
+  {
+    "variant": "Liferaft 20 PersonPort1",
+    "canonical": "Liferaft"
+  },
+  {
+    "variant": "Liferaft 20 PersonPort2",
+    "canonical": "Liferaft"
+  },
+  {
+    "variant": "Liferaft 20 PersonStarboard1",
+    "canonical": "Liferaft"
+  },
+  {
+    "variant": "Liferaft 20 PersonStarboard2",
+    "canonical": "Liferaft"
+  },
+  {
+    "variant": "Liferaft 25 PersonPort1",
+    "canonical": "Liferaft"
+  },
+  {
+    "variant": "Liferaft 25 PersonStarboard1",
+    "canonical": "Liferaft"
+  },
+  {
+    "variant": "Liferaft 6 PersonForward",
+    "canonical": "Liferaft"
+  },
+  {
+    "variant": "Liferaft 6 PersonForward1",
+    "canonical": "Liferaft"
+  },
+  {
+    "variant": "Liferaft 6 PersonNo1",
+    "canonical": "Liferaft"
+  },
+  {
+    "variant": "Liferaft 6 PersonStarboard",
+    "canonical": "Liferaft"
+  },
+  {
+    "variant": "Liferaft Davit LaunchedPort1",
+    "canonical": "Liferaft"
+  },
+  {
+    "variant": "Liferaft Davit LaunchedPort2",
+    "canonical": "Liferaft"
+  },
+  {
+    "variant": "Liferaft Embarkation LadderForward",
+    "canonical": "Liferaft Embarkation Ladder"
+  },
+  {
+    "variant": "Liferaft Embarkation LadderForward1",
+    "canonical": "Liferaft Embarkation Ladder"
+  },
+  {
+    "variant": "Liferaft Embarkation LadderNo1",
+    "canonical": "Liferaft Embarkation Ladder"
+  },
+  {
+    "variant": "Liferaft Embarkation LadderNo2",
+    "canonical": "Liferaft Embarkation Ladder"
+  },
+  {
+    "variant": "Liferaft Embarkation LadderNo3",
+    "canonical": "Liferaft Embarkation Ladder"
+  },
+  {
+    "variant": "Liferaft Embarkation LadderNo4",
+    "canonical": "Liferaft Embarkation Ladder"
+  },
+  {
+    "variant": "Liferaft Embarkation LadderNo5",
+    "canonical": "Liferaft Embarkation Ladder"
+  },
+  {
+    "variant": "Liferaft Embarkation LadderPort",
+    "canonical": "Liferaft Embarkation Ladder"
+  },
+  {
+    "variant": "Liferaft Embarkation LadderPort1",
+    "canonical": "Liferaft Embarkation Ladder"
+  },
+  {
+    "variant": "Liferaft Embarkation LadderPort2",
+    "canonical": "Liferaft Embarkation Ladder"
+  },
+  {
+    "variant": "Liferaft Embarkation LadderStarboard",
+    "canonical": "Liferaft Embarkation Ladder"
+  },
+  {
+    "variant": "Liferaft Embarkation LadderStarboard1",
+    "canonical": "Liferaft Embarkation Ladder"
+  },
+  {
+    "variant": "Liferaft Embarkation LadderStarboard2",
+    "canonical": "Liferaft Embarkation Ladder"
+  },
+  {
+    "variant": "Liferaft/Rescue Boat DavitAft-Port",
+    "canonical": "Liferaft/Rescue Boat Davit"
+  },
+  {
+    "variant": "Liferaft/Rescue Boat DavitPort",
+    "canonical": "Liferaft/Rescue Boat Davit"
+  },
+  {
+    "variant": "Liferaft/Rescue Boat DavitPort1",
+    "canonical": "Liferaft/Rescue Boat Davit"
+  },
+  {
+    "variant": "Liferaft/Rescue Boat DavitStarboard",
+    "canonical": "Liferaft/Rescue Boat Davit"
+  },
+  {
+    "variant": "Liferaft/Rescue Boat DavitStarboard1",
+    "canonical": "Liferaft/Rescue Boat Davit"
+  },
+  {
+    "variant": "LiferaftAft1",
+    "canonical": "Liferaft"
+  },
+  {
+    "variant": "LiferaftForward",
+    "canonical": "Liferaft"
+  },
+  {
+    "variant": "LiferaftForward1",
+    "canonical": "Liferaft"
+  },
+  {
+    "variant": "LiferaftFwd-Port",
+    "canonical": "Liferaft"
+  },
+  {
+    "variant": "LiferaftFwd-Stbd",
+    "canonical": "Liferaft"
+  },
+  {
+    "variant": "LiferaftFwd-Stbd1",
+    "canonical": "Liferaft"
+  },
+  {
+    "variant": "LiferaftNo4",
+    "canonical": "Liferaft"
+  },
+  {
+    "variant": "LiferaftNo5",
+    "canonical": "Liferaft"
+  },
+  {
+    "variant": "LiferaftPort",
+    "canonical": "Liferaft"
+  },
+  {
+    "variant": "LiferaftPort1",
+    "canonical": "Liferaft"
+  },
+  {
+    "variant": "LiferaftPort2",
+    "canonical": "Liferaft"
+  },
+  {
+    "variant": "LiferaftStarboard",
+    "canonical": "Liferaft"
+  },
+  {
+    "variant": "LiferaftStarboard1",
+    "canonical": "Liferaft"
+  },
+  {
+    "variant": "LiferaftStarboard2",
+    "canonical": "Liferaft"
+  },
+  {
+    "variant": "LO Purifier Feed Pump",
+    "canonical": "AE LO Purifier Feed Pump"
+  },
+  {
+    "variant": "LO Purifier Supply Pump",
+    "canonical": "AE LO Purifier Feed Pump"
+  },
+  {
+    "variant": "LO Purifier#1",
+    "canonical": "ME LO Purifier"
+  },
+  {
+    "variant": "LO Purifier#2",
+    "canonical": "ME LO Purifier"
+  },
+  {
+    "variant": "Machine Parts Handling Crane",
+    "canonical": "Machine Parts Handling Crane"
+  },
+  {
+    "variant": "Machine Parts Handling CranePort",
+    "canonical": "Machine Parts Handling Crane"
+  },
+  {
+    "variant": "Machine Parts Handling CraneStarboard",
+    "canonical": "Machine Parts Handling Crane"
+  },
+  {
+    "variant": "Main Air Reservoir",
+    "canonical": "Main Air Reservoir"
+  },
+  {
+    "variant": "Main CSW Pump # 1",
+    "canonical": "Main CSW Pump"
+  },
+  {
+    "variant": "Main CSW Pump # 2",
+    "canonical": "Main CSW Pump"
+  },
+  {
+    "variant": "Main CSW Pump#1",
+    "canonical": "Main CSW Pump"
+  },
+  {
+    "variant": "Main CSW Pump#2",
+    "canonical": "Main CSW Pump"
+  },
+  {
+    "variant": "Main CSW Pump#3",
+    "canonical": "Main CSW Pump"
+  },
+  {
+    "variant": "Main CSW PumpNo1",
+    "canonical": "Main CSW Pump"
+  },
+  {
+    "variant": "Main CSW PumpNo2",
+    "canonical": "Main CSW Pump"
+  },
+  {
+    "variant": "Main CSW PumpNo3",
+    "canonical": "Main CSW Pump"
+  },
+  {
+    "variant": "Main Engine",
+    "canonical": "Main Engine"
+  },
+  {
+    "variant": "Main Engine - MC",
+    "canonical": "Main Engine"
+  },
+  {
+    "variant": "Main Engine - MC #1",
+    "canonical": "Main Engine"
+  },
+  {
+    "variant": "Main Engine - ME - B #1",
+    "canonical": "Main Engine"
+  },
+  {
+    "variant": "Main Engine - ME-C II",
+    "canonical": "Main Engine"
+  },
+  {
+    "variant": "Main Engine - ME-C II GI",
+    "canonical": "Main Engine"
+  },
+  {
+    "variant": "Main Engine - ME-C II GI#1",
+    "canonical": "Main Engine"
+  },
+  {
+    "variant": "Main Engine - ME-C II#1",
+    "canonical": "Main Engine"
+  },
+  {
+    "variant": "Main Engine - RT - A",
+    "canonical": "Main Engine"
+  },
+  {
+    "variant": "Main Engine - RT - A#1",
+    "canonical": "Main Engine"
+  },
+  {
+    "variant": "Main Engine - RTFLEX#1",
+    "canonical": "Main Engine"
+  },
+  {
+    "variant": "Main Engine - UEC#1",
+    "canonical": "Main Engine"
+  },
+  {
+    "variant": "Main Engine - W#1",
+    "canonical": "Main Engine"
+  },
+  {
+    "variant": "Main Engine - WinGD#1",
+    "canonical": "Main Engine"
+  },
+  {
+    "variant": "Main Engine - WX #1",
+    "canonical": "Main Engine"
+  },
+  {
+    "variant": "Main Transformer # 1",
+    "canonical": "Transformer"
+  },
+  {
+    "variant": "Main Transformer # 2",
+    "canonical": "Transformer"
+  },
+  {
+    "variant": "ME FO Heater",
+    "canonical": "ME FO Heater"
+  },
+  {
+    "variant": "ME FO Heater#1",
+    "canonical": "ME FO Heater"
+  },
+  {
+    "variant": "ME JCFW Cooler#1",
+    "canonical": "HT Cooler"
+  },
+  {
+    "variant": "ME JCFW Pump # 1",
+    "canonical": "ME JCFW Pump"
+  },
+  {
+    "variant": "ME JCFW Pump # 2",
+    "canonical": "ME JCFW Pump"
+  },
+  {
+    "variant": "ME LO Purifier",
+    "canonical": "LO Purifier"
+  },
+  {
+    "variant": "ME LO Purifier Heater#1",
+    "canonical": "ME LO Purifier Heater#1"
+  },
+  {
+    "variant": "Miscellaneous Handling DavitPort",
+    "canonical": "Miscellaneous Handling Davit"
+  },
+  {
+    "variant": "Miscellaneous Handling DavitStarboard1",
+    "canonical": "Miscellaneous Handling Davit"
+  },
+  {
+    "variant": "Mooring Winch Hydraulic UnitAft",
+    "canonical": "Mooring Winch Hydraulic Unit"
+  },
+  {
+    "variant": "Mooring Winch Hydraulic UnitAft1",
+    "canonical": "Mooring Winch Hydraulic Unit"
+  },
+  {
+    "variant": "Mooring WinchAft",
+    "canonical": "Mooring Winch"
+  },
+  {
+    "variant": "Mooring WinchAft1",
+    "canonical": "Mooring Winch"
+  },
+  {
+    "variant": "Mooring WinchAft2",
+    "canonical": "Mooring Winch"
+  },
+  {
+    "variant": "Mooring WinchAft3",
+    "canonical": "Mooring Winch"
+  },
+  {
+    "variant": "Mooring WinchAft-Port",
+    "canonical": "Mooring Winch"
+  },
+  {
+    "variant": "Mooring WinchAft-Port1",
+    "canonical": "Mooring Winch"
+  },
+  {
+    "variant": "Mooring WinchAft-Port2",
+    "canonical": "Mooring Winch"
+  },
+  {
+    "variant": "Mooring WinchAft-Stbd",
+    "canonical": "Mooring Winch"
+  },
+  {
+    "variant": "Mooring WinchAft-Stbd1",
+    "canonical": "Mooring Winch"
+  },
+  {
+    "variant": "Mooring WinchAft-Stbd2",
+    "canonical": "Mooring Winch"
+  },
+  {
+    "variant": "Mooring WinchCentre1",
+    "canonical": "Mooring Winch"
+  },
+  {
+    "variant": "Mooring WinchCentre2",
+    "canonical": "Mooring Winch"
+  },
+  {
+    "variant": "Mooring WinchForward",
+    "canonical": "Mooring Winch"
+  },
+  {
+    "variant": "Mooring WinchForward1",
+    "canonical": "Mooring Winch"
+  },
+  {
+    "variant": "Mooring WinchFwd-Port1",
+    "canonical": "Mooring Winch"
+  },
+  {
+    "variant": "Mooring WinchFwd-Stbd1",
+    "canonical": "Mooring Winch"
+  },
+  {
+    "variant": "Mooring WinchPort",
+    "canonical": "Mooring Winch"
+  },
+  {
+    "variant": "Mooring WinchPort1",
+    "canonical": "Mooring Winch"
+  },
+  {
+    "variant": "Mooring WinchPort2",
+    "canonical": "Mooring Winch"
+  },
+  {
+    "variant": "Mooring WinchStarboard",
+    "canonical": "Mooring Winch"
+  },
+  {
+    "variant": "Mooring WinchStarboard1",
+    "canonical": "Mooring Winch"
+  },
+  {
+    "variant": "Mooring WinchStarboard2",
+    "canonical": "Mooring Winch"
+  },
+  {
+    "variant": "Mooring WinchStarboard3",
+    "canonical": "Mooring Winch"
+  },
+  {
+    "variant": "Pilot Combination LadderPort1",
+    "canonical": "Pilot Combination Ladder"
+  },
+  {
+    "variant": "Pilot Combination LadderStarboard1",
+    "canonical": "Pilot Combination Ladder"
+  },
+  {
+    "variant": "Pilot LadderPort",
+    "canonical": "Pilot Ladder"
+  },
+  {
+    "variant": "Pilot LadderPort1",
+    "canonical": "Pilot Ladder"
+  },
+  {
+    "variant": "Pilot LadderStarboard",
+    "canonical": "Pilot Ladder"
+  },
+  {
+    "variant": "Pilot LadderStarboard1",
+    "canonical": "Pilot Ladder"
+  },
+  {
+    "variant": "Provision Crane SPort1",
+    "canonical": "Provision Crane"
+  },
+  {
+    "variant": "Provision Crane#1",
+    "canonical": "Provision Crane"
+  },
+  {
+    "variant": "Provision CranePort",
+    "canonical": "Provision Crane"
+  },
+  {
+    "variant": "Provision CranePort1",
+    "canonical": "Provision Crane"
+  },
+  {
+    "variant": "Provision CraneStarboard",
+    "canonical": "Provision Crane"
+  },
+  {
+    "variant": "Provision CraneStarboard1",
+    "canonical": "Provision Crane"
+  },
+  {
+    "variant": "Provision Handling DavitStarboard1",
+    "canonical": "Provision Crane"
+  },
+  {
+    "variant": "Radar Transponder#1",
+    "canonical": "SART"
+  },
+  {
+    "variant": "Radar Transponder#2",
+    "canonical": "SART"
+  },
+  {
+    "variant": "RefrigeratorNo1",
+    "canonical": "Refrigerator"
+  },
+  {
+    "variant": "RefrigeratorNo2",
+    "canonical": "Refrigerator"
+  },
+  {
+    "variant": "Rescue Boat Battery # 1",
+    "canonical": "Rescue Boat Battery"
+  },
+  {
+    "variant": "Rescue Boat DavitPort",
+    "canonical": "Liferaft/Rescue Boat Davit"
+  },
+  {
+    "variant": "Rescue BoatAft-Port",
+    "canonical": "Rescue Boat"
+  },
+  {
+    "variant": "Rescue BoatPort",
+    "canonical": "Rescue Boat"
+  },
+  {
+    "variant": "Rescue BoatPort1",
+    "canonical": "Rescue Boat"
+  },
+  {
+    "variant": "Rescue BoatStarboard",
+    "canonical": "Rescue Boat"
+  },
+  {
+    "variant": "Rescue BoatStarboard1",
+    "canonical": "Rescue Boat"
+  },
+  {
+    "variant": "SARTPort",
+    "canonical": "SART"
+  },
+  {
+    "variant": "SARTPort1",
+    "canonical": "SART"
+  },
+  {
+    "variant": "SARTStarboard",
+    "canonical": "SART"
+  },
+  {
+    "variant": "SARTStarboard1",
+    "canonical": "SART"
+  },
+  {
+    "variant": "S-Band Radar",
+    "canonical": "S-Band Radar"
+  },
+  {
+    "variant": "Service Air Reservoir",
+    "canonical": "Other Reservoirs"
+  },
+  {
+    "variant": "Sludge Circulating Pump#1",
+    "canonical": "Sludge Pump"
+  },
+  {
+    "variant": "Stern Tube - Sealing System#1",
+    "canonical": "Stern Tube - Sealing System"
+  },
+  {
+    "variant": "Suez Search Light DavitForward1",
+    "canonical": "Suez Search Light Davit"
+  },
+  {
+    "variant": "Tail Rope#1",
+    "canonical": "Tail Rope"
+  },
+  {
+    "variant": "VHF Radio Telephone # 1",
+    "canonical": "VHF Radio Telephone"
+  },
+  {
+    "variant": "VHF Radio Telephone # 2",
+    "canonical": "VHF Radio Telephone"
+  },
+  {
+    "variant": "Void SpacesNo2P",
+    "canonical": "Void Spaces"
+  },
+  {
+    "variant": "Void SpacesNo2S",
+    "canonical": "Void Spaces"
+  },
+  {
+    "variant": "Void SpacesNo4P",
+    "canonical": "Void Spaces"
+  },
+  {
+    "variant": "Void SpacesNo4S",
+    "canonical": "Void Spaces"
+  },
+  {
+    "variant": "Void SpacesNo6P",
+    "canonical": "Void Spaces"
+  },
+  {
+    "variant": "Void SpacesNo6S",
+    "canonical": "Void Spaces"
+  },
+  {
+    "variant": "Void SpacesNo7P",
+    "canonical": "Void Spaces"
+  },
+  {
+    "variant": "Void SpacesNo7S",
+    "canonical": "Void Spaces"
+  },
+  {
+    "variant": "Void SpacesNoBELOW AFT ACCOMMODATION GANGWAY",
+    "canonical": "Void Spaces"
+  },
+  {
+    "variant": "Void SpacesNoBRIDGE DECK",
+    "canonical": "Void Spaces"
+  },
+  {
+    "variant": "Void SpacesNoC DECK",
+    "canonical": "Void Spaces"
+  },
+  {
+    "variant": "Void SpacesNoFORE PEAK",
+    "canonical": "Void Spaces"
+  },
+  {
+    "variant": "X-Band Radar",
+    "canonical": "X-Band Radar"
+  },
+  {
+    "variant": "Combined Windlass Mooring WinchFwd-Port3",
+    "canonical": "Combined Windlass Mooring Winch"
+  },
+  {
+    "variant": "Combined Windlass Mooring WinchFwd-Stbd2",
+    "canonical": "Combined Windlass Mooring Winch"
+  },
+  {
+    "variant": "General Service Transformer#1",
+    "canonical": "Transformer"
+  },
+  {
+    "variant": "BOG Compressor # 1",
+    "canonical": "BOG Compressor"
+  },
+  {
+    "variant": "BOG Compressor # 2",
+    "canonical": "BOG Compressor"
+  },
+  {
+    "variant": "ODME # 1",
+    "canonical": "ODME"
+  },
+  {
+    "variant": "Inert Gas Uptake Plant",
+    "canonical": "Inert Gas Plant"
+  },
+  {
+    "variant": "Cargo Pump # 1",
+    "canonical": "Cargo Pump"
+  },
+  {
+    "variant": "Cargo Pump # 2",
+    "canonical": "Cargo Pump"
+  },
+  {
+    "variant": "Cargo Pump # 3",
+    "canonical": "Cargo Pump"
+  },
+  {
+    "variant": "COPT # 1",
+    "canonical": "COPT"
+  },
+  {
+    "variant": "COPT # 2",
+    "canonical": "COPT"
+  },
+  {
+    "variant": "COPT # 3",
+    "canonical": "COPT"
+  },
+  {
+    "variant": "Main Engine - ME-C GI#1",
+    "canonical": "Main Engine"
+  },
+  {
+    "variant": "MGO Transfer Pump#1",
+    "canonical": "DO Transfer Pump"
+  },
+  {
+    "variant": "GMDSS # 1",
+    "canonical": "GMDSS"
+  },
+  {
+    "variant": "Cargo Hose Handling Crane#1",
+    "canonical": "Cargo Hose Handling Crane"
+  },
+  {
+    "variant": "Cargo Hose Handling Crane # 1",
+    "canonical": "Cargo Hose Handling Crane"
+  },
+  {
+    "variant": "Cargo Power Pack Unit",
+    "canonical": "Cargo Power Pack Unit#1"
+  },
+  {
+    "variant": "MGO Cooler#1",
+    "canonical": "ME DO Cooler"
+  },
+  {
+    "variant": "Auxiliary MGO Cooler#1",
+    "canonical": "AE DO Cooler"
+  },
+  {
+    "variant": "HFO Transfer Pump#1",
+    "canonical": "FO Transfer Pump"
+  },
+  {
+    "variant": "Quick Closing Valve Air Reservoir#1",
+    "canonical": "Other Reservoir"
+  },
+  {
+    "variant": "Working Air Reservoir#1",
+    "canonical": "Other Reservoir"
+  }
 ]
