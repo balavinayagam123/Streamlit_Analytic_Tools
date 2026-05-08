@@ -224,10 +224,27 @@ def highlight_anomalies(df, anomaly_cols_map: dict):
         styled = styled.apply(highlight, subset=[col])
     return styled
 
+def style_unit_table(df: pd.DataFrame, anom_cells: set) -> pd.DataFrame:
+    """
+    Build a same-shape DataFrame of CSS strings.
+    anom_cells = set of (row_label, col_name) tuples that should be highlighted.
+    """
+    styles = pd.DataFrame("", index=df.index, columns=df.columns)
+    for row_label, col_name in anom_cells:
+        if row_label in styles.index and col_name in styles.columns:
+            styles.loc[row_label, col_name] = "background-color:#FAEEDA;color:#854F0B;font-weight:bold"
+    # Green for Total column
+    if "Total" in styles.columns:
+        for row_label in styles.index:
+            if styles.loc[row_label, "Total"] == "":
+                styles.loc[row_label, "Total"] = "color:#3B6D11;font-weight:bold"
+    return styles
+
 with col_me:
     n_cyl = len(me.get("units", []))
-    st.markdown(f"**ME cylinder unit completeness** · {n_cyl} × 8 = {n_cyl*8} jobs")
+    st.markdown(f"**ME cylinder unit completeness** · {n_cyl} × 8 = {n_cyl * 8} jobs")
     if me.get("units"):
+        # Build display DataFrame — keep full column names (no truncation)
         me_rows = {}
         for unit in me["units"]:
             label = unit.replace("Cylinder Unit#", "#")
@@ -239,34 +256,34 @@ with col_me:
         me_rows["Total"] = me_totals
 
         me_df = pd.DataFrame(me_rows).T
-        # Shorten column names
-        me_df.columns = [c[:8] for c in me_df.columns]
 
-        # Build anomaly map
-        anom_map = {}
+        # Build anomaly cell set using exact column names (no truncation)
+        me_anom_cells = set()
         for sc, bad_units in me.get("anomalies", {}).items():
-            short_sc = sc[:8]
-            anom_map[short_sc] = [u.replace("Cylinder Unit#","#") for u in bad_units]
+            for unit in bad_units:
+                row_label = unit.replace("Cylinder Unit#", "#")
+                if sc in me_df.columns:
+                    me_anom_cells.add((row_label, sc))
+            # Also flag the Total column for that row
+            if bad_units:
+                me_anom_cells.add(("Total", "Total"))
 
+        me_styles = style_unit_table(me_df, me_anom_cells)
         st.dataframe(
-            me_df.style.apply(
-                lambda col: [
-                    "background-color:#FAEEDA;color:#854F0B;font-weight:bold"
-                    if col.name in anom_map and me_df.index[i] in anom_map[col.name] else
-                    "color:#3B6D11;font-weight:bold" if col.name == "Total" else ""
-                    for i in range(len(col))
-                ]
-            ),
+            me_df.style.apply(lambda _: me_styles, axis=None),
             use_container_width=True,
         )
 
-        # Anomaly callouts
         for sc, bad_units in me.get("anomalies", {}).items():
             if bad_units:
-                labels = ", ".join(u.replace("Cylinder Unit#","#") for u in bad_units)
-                st.markdown(f'<div class="anom-banner">⚠ <strong>{sc}</strong>: inconsistent job count across {labels}. Investigate missing jobs.</div>', unsafe_allow_html=True)
+                labels = ", ".join(u.replace("Cylinder Unit#", "#") for u in bad_units)
+                st.markdown(
+                    f'<div class="anom-banner">⚠ <strong>{sc}</strong>: '
+                    f'inconsistent job count across {labels}. Investigate missing jobs.</div>',
+                    unsafe_allow_html=True,
+                )
     else:
-        st.info("ME sub-component data not available — check Machinery Location and Sub Component columns in vessel export.")
+        st.info("ME sub-component data not available — check Machinery Location and Sub Component columns.")
 
 with col_ae:
     n_ae = len(ae.get("engines", []))
@@ -283,28 +300,31 @@ with col_ae:
         ae_rows["Total"] = ae_totals
 
         ae_df = pd.DataFrame(ae_rows).T
-        anom_map_ae = {
-            sc.replace("AE ", ""): [e.replace("Auxiliary Engine#","AE #") for e in bad_eng]
-            for sc, bad_eng in ae.get("anomalies", {}).items()
-        }
-        ae_df.columns = [c.replace("AE ", "") for c in ae_df.columns]
 
+        # Build anomaly cell set
+        ae_anom_cells = set()
+        for sc, bad_engs in ae.get("anomalies", {}).items():
+            for eng in bad_engs:
+                row_label = eng.replace("Auxiliary Engine#", "AE #")
+                if sc in ae_df.columns:
+                    ae_anom_cells.add((row_label, sc))
+            if bad_engs:
+                ae_anom_cells.add(("Total", "Total"))
+
+        ae_styles = style_unit_table(ae_df, ae_anom_cells)
         st.dataframe(
-            ae_df.style.apply(
-                lambda col: [
-                    "background-color:#FAEEDA;color:#854F0B;font-weight:bold"
-                    if col.name in anom_map_ae and ae_df.index[i] in anom_map_ae[col.name] else
-                    "color:#3B6D11;font-weight:bold" if col.name == "Total" else ""
-                    for i in range(len(col))
-                ]
-            ),
+            ae_df.style.apply(lambda _: ae_styles, axis=None),
             use_container_width=True,
         )
 
         for sc, bad_engs in ae.get("anomalies", {}).items():
             if bad_engs:
-                labels = ", ".join(e.replace("Auxiliary Engine#","AE #") for e in bad_engs)
-                st.markdown(f'<div class="anom-banner">⚠ <strong>{sc}</strong>: inconsistent job count across {labels}.</div>', unsafe_allow_html=True)
+                labels = ", ".join(e.replace("Auxiliary Engine#", "AE #") for e in bad_engs)
+                st.markdown(
+                    f'<div class="anom-banner">⚠ <strong>{sc}</strong>: '
+                    f'inconsistent job count across {labels}.</div>',
+                    unsafe_allow_html=True,
+                )
     else:
         st.info("AE sub-component data not available.")
 
