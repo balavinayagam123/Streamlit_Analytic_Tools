@@ -1,0 +1,19 @@
+{
+  "ASP Maple": {
+    "vessel_type": "Tanker",
+    "main_engine": "MAN_MEC",
+    "aux_engine": "Yanmar 6EY22",
+    "aux_engine_count": 3,
+    "cylinder_count": 6,
+    "bwts_maker": "Optimarine",
+    "scr": ["LP_YANMAR", "HP_HITACHI"],
+    "egcs": true,
+    "sheet_mapping": {
+      "BWTS": "BWTSOpti",
+      "Main Engine": "MEMEC",
+      "LP SCR": "LPSCRYANMAR",
+      "HP SCR": "HPSCRHITACHI",
+      "AE": "AE Jobs"
+    }
+  }
+}
