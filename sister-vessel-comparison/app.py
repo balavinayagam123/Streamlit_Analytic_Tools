@@ -315,10 +315,11 @@ st.divider()
 
 st.subheader("📊 Fleet-Wide Analytics")
 
-atab1, atab2, atab3 = st.tabs([
+atab1, atab2, atab3, atab4 = st.tabs([
     "📋 Gap Matrix",
     "📊 Department Gap Analysis",
     "📈 Frequency Distribution",
+    "🔩 Machinery Job Count",
 ])
 
 # ── Gap Matrix ────────────────────────────────────────────────────────────────
@@ -450,6 +451,95 @@ with atab3:
                 else:
                     st.success("No unique intervals")
 
+
+# ── Machinery Job Count Pivot ─────────────────────────────────────────────────
+
+with atab4:
+    st.markdown("### Machinery Job Count per Vessel")
+    st.markdown(
+        "Total number of PMS jobs assigned to each machinery across all uploaded vessels. "
+        "Blank cells indicate the machinery is not present in that vessel's PMS."
+    )
+
+    # Build one long dataframe with vessel + machinery + job count
+    mach_frames = []
+    for df, name in zip(vessels_df, vessel_names):
+        if "Machinery Location" not in df.columns:
+            continue
+        counts = (
+            df.groupby("Machinery Location")
+            .size()
+            .reset_index(name=name)
+        )
+        mach_frames.append(counts.set_index("Machinery Location"))
+
+    if mach_frames:
+        # Outer join so all machinery from all vessels appear
+        pivot = mach_frames[0]
+        for frame in mach_frames[1:]:
+            pivot = pivot.join(frame, how="outer")
+
+        pivot = pivot.reset_index().rename(columns={"Machinery Location": "Machinery Location"})
+        pivot = pivot.sort_values("Machinery Location").reset_index(drop=True)
+
+        # Convert to int where possible (NaN stays as blank via styler)
+        for col in vessel_names:
+            if col in pivot.columns:
+                pivot[col] = pd.to_numeric(pivot[col], errors="coerce")
+
+        # Total column — sum across vessels
+        pivot["Total (All Vessels)"] = pivot[vessel_names].sum(axis=1, skipna=True).astype(int)
+
+        # Highlight cells where a vessel has NO jobs (missing machinery)
+        def highlight_pivot(df):
+            styles = pd.DataFrame("", index=df.index, columns=df.columns)
+            for col in vessel_names:
+                if col in df.columns:
+                    styles[col] = df[col].apply(
+                        lambda v: "background-color:#ffe0e0;color:#900" if pd.isna(v)
+                        else "background-color:#e8f5e9" if v > 0
+                        else ""
+                    )
+            styles["Total (All Vessels)"] = "font-weight:bold"
+            return styles
+
+        # Summary metrics
+        total_machinery = len(pivot)
+        all_cols = [c for c in vessel_names if c in pivot.columns]
+        missing_counts = {name: int(pivot[name].isna().sum()) for name in all_cols}
+
+        mc1, mc2 = st.columns([1, 3])
+        with mc1:
+            st.metric("Total Unique Machineries", total_machinery)
+        with mc2:
+            miss_cols = st.columns(len(all_cols))
+            for idx, name in enumerate(all_cols):
+                miss_cols[idx].metric(f"Not in {name}", missing_counts[name],
+                                      delta=f"-{missing_counts[name]}" if missing_counts[name] else "0",
+                                      delta_color="inverse")
+
+        st.caption("🟢 Green = jobs exist  |  🔴 Red/blank = machinery absent from that vessel's PMS")
+
+        # Optional filter
+        mach_search = st.text_input("🔍 Search machinery name", placeholder="e.g. Main Engine, Pump, Boiler")
+        display_pivot = pivot.copy()
+        if mach_search:
+            display_pivot = display_pivot[
+                display_pivot["Machinery Location"].str.contains(mach_search, case=False, na=False)
+            ]
+
+        st.dataframe(
+            display_pivot.reset_index(drop=True).style.apply(highlight_pivot, axis=None).format(
+                {name: lambda v: "" if pd.isna(v) else str(int(v)) for name in vessel_names}
+            ),
+            use_container_width=True,
+            height=520
+        )
+
+        # Add pivot to download
+        st.session_state["machinery_pivot"] = pivot
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # DOWNLOAD
 # ─────────────────────────────────────────────────────────────────────────────
@@ -464,6 +554,9 @@ for i, j in pairs:
     export_sheets[f"Missing in {nj}"[:31]]    = mj
     export_sheets[f"Missing in {ni}"[:31]]    = mi
     export_sheets[f"FreqMM {ni[:8]}-{nj[:8]}"[:31]] = fm
+
+if "machinery_pivot" in st.session_state:
+    export_sheets["Machinery Job Count"] = st.session_state["machinery_pivot"]
 
 excel_data = to_excel(export_sheets)
 pair_str   = "_".join(vessel_names)
