@@ -92,6 +92,24 @@ def to_excel(dfs: dict) -> bytes:
     return buf.getvalue()
 
 
+# Excel-style 3-color scale: green (low) -> yellow (mid) -> red (high)
+HEAT_GREEN, HEAT_YELLOW, HEAT_RED = (99, 190, 123), (255, 235, 132), (248, 105, 107)
+
+
+def _mix(c1, c2, t):
+    return tuple(round(c1[i] + (c2[i] - c1[i]) * t) for i in range(3))
+
+
+def heat_color(v, vmin, vmax):
+    t = 0.5 if vmax == vmin else (v - vmin) / (vmax - vmin)
+    rgb = _mix(HEAT_GREEN, HEAT_YELLOW, t / 0.5) if t <= 0.5 else _mix(HEAT_YELLOW, HEAT_RED, (t - 0.5) / 0.5)
+    return f"background-color: rgb{rgb}"
+
+
+def heatmap_column(col):
+    return [heat_color(v, col.min(), col.max()) for v in col]
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # SIDEBAR
 # ─────────────────────────────────────────────────────────────────────────────
@@ -195,19 +213,31 @@ if src_f and "Job Source" in df_f.columns:
     df_f = df_f[df_f["Job Source"].isin(src_f)]
 
 df_f = primary_rank(df_f)
-
 rank_opts = clean_opts(df_f["Rank"])
-rank_f = st.multiselect("Rank(s) to include", options=rank_opts, default=rank_opts)
+
+# ─────────────────────────────────────────────────────────────────────────────
+# RANK EFFORT SUMMARY
+# ─────────────────────────────────────────────────────────────────────────────
+
+st.divider()
+st.subheader(f"📊 Rank Reporting Effort — next {period_label}")
+
+metric_slots = st.columns(3)
+chart_col, filter_col = st.columns([3, 1])
+
+with filter_col:
+    st.markdown("**Rank(s) to include**")
+    rank_f = st.multiselect(
+        "Rank(s) to include", options=rank_opts, default=rank_opts, label_visibility="collapsed"
+    )
+
 df_f = df_f[df_f["Rank"].isin(rank_f)]
 
 if df_f.empty:
     st.warning("No jobs match the current filters.")
     st.stop()
 
-# ─────────────────────────────────────────────────────────────────────────────
-# EXPECTED OCCURRENCES WITHIN THE SELECTED PERIOD
-# ─────────────────────────────────────────────────────────────────────────────
-
+# Expected occurrences within the selected period
 df_f["Expected Occurrences"] = np.where(
     df_f["Is Time Based"], period_days / df_f["Freq Days"], np.nan
 )
@@ -217,13 +247,6 @@ if include_hours:
     df_f.loc[hrs_mask, "Expected Occurrences"] = period_days / equiv_days[hrs_mask]
 
 df_f["Due At Least Once"] = df_f["Expected Occurrences"].fillna(0) >= 1
-
-# ─────────────────────────────────────────────────────────────────────────────
-# RANK EFFORT SUMMARY
-# ─────────────────────────────────────────────────────────────────────────────
-
-st.divider()
-st.subheader(f"📊 Rank Reporting Effort — next {period_label}")
 
 summary = (
     df_f.groupby("Rank")
@@ -246,11 +269,10 @@ summary["Running-Hour Jobs"] = summary["Total Jobs"] - summary["Time-Based Jobs"
 summary = summary.sort_values(f"Est. Reports in {period_label}", ascending=False)
 summary_display = summary.round(1)
 
-k1, k2, k3 = st.columns(3)
-k1.metric("Ranks in scope", len(summary))
-k2.metric(f"Total est. reports / {period_label}", f"{summary['Est. Reports in ' + period_label].sum():,.0f}")
+metric_slots[0].metric("Ranks in scope", len(summary))
+metric_slots[1].metric(f"Total est. reports / {period_label}", f"{summary['Est. Reports in ' + period_label].sum():,.0f}")
 top_rank = summary.index[0] if len(summary) else "—"
-k3.metric("Highest-effort rank", top_rank)
+metric_slots[2].metric("Highest-effort rank", top_rank)
 
 chart_df = summary.reset_index().sort_values(f"Est. Reports in {period_label}", ascending=True)
 fig = px.bar(
@@ -271,15 +293,20 @@ fig.update_layout(
     margin=dict(l=10, r=40, t=10, b=10),
 )
 fig.update_xaxes(gridcolor="#e1e0d9", zerolinecolor="#c3c2b7")
-st.plotly_chart(fig, use_container_width=True)
+with chart_col:
+    st.plotly_chart(fig, use_container_width=True)
 
-st.dataframe(
-    summary_display[
-        ["Total Jobs", "Time-Based Jobs", "Running-Hour Jobs",
-         f"Jobs Due ≥1x in {period_label}", f"Est. Reports in {period_label}"]
-    ],
-    use_container_width=True,
+summary_cols = ["Total Jobs", "Time-Based Jobs", "Running-Hour Jobs",
+                f"Jobs Due ≥1x in {period_label}", f"Est. Reports in {period_label}"]
+summary_fmt = {c: "{:,.0f}" for c in summary_cols}
+summary_fmt[f"Est. Reports in {period_label}"] = "{:,.1f}"
+
+styled_summary = (
+    summary_display[summary_cols].style
+    .apply(heatmap_column, axis=0)
+    .format(summary_fmt)
 )
+st.dataframe(styled_summary, use_container_width=True)
 st.caption(
     "**Est. Reports** = period length ÷ job frequency, summed per rank — the statistical average "
     "number of times each rank must submit a job report in the selected period. **Jobs Due ≥1x** "
@@ -331,16 +358,6 @@ else:
     body = pivot.loc[pivot.index != "Grand Total", data_cols]
     vmin, vmax = (body.values.min(), body.values.max()) if body.size else (0, 1)
 
-    def _mix(c1, c2, t):
-        return tuple(round(c1[i] + (c2[i] - c1[i]) * t) for i in range(3))
-
-    GREEN, YELLOW, RED = (99, 190, 123), (255, 235, 132), (248, 105, 107)
-
-    def heat_color(v):
-        t = 0.5 if vmax == vmin else (v - vmin) / (vmax - vmin)
-        rgb = _mix(GREEN, YELLOW, t / 0.5) if t <= 0.5 else _mix(YELLOW, RED, (t - 0.5) / 0.5)
-        return f"background-color: rgb{rgb}"
-
     def style_matrix(row):
         if row.name == "Grand Total":
             return ["background-color:#c6d9ec;font-weight:bold"] * len(row)
@@ -349,7 +366,7 @@ else:
             if col == "Grand Total":
                 styles.append("background-color:#dce6f1;font-weight:bold")
             else:
-                styles.append(heat_color(row[col]))
+                styles.append(heat_color(row[col], vmin, vmax))
         return styles
 
     styled = pivot.style.apply(style_matrix, axis=1).format("{:,.0f}")
