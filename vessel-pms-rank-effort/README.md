@@ -42,12 +42,26 @@ cover the job. Only the **first-listed rank** is used for effort
 attribution — the rest are ignored — so the rank list stays manageable and
 effort isn't double-counted across alternates.
 
+### Verifying effort
+
+Two extra KPIs estimate the sign-off workload for supervisors, using the
+same period and filters as everything else:
+
+- **CE verifying effort** — sum of estimated reports for all engineer and
+  electrical ranks' jobs, including the Chief Engineer's own.
+- **Master verifying effort** — sum of estimated reports for Master, Chief
+  Officer, 2nd Officer and 3rd Officer jobs.
+
+All five KPIs are shown as a single row of boxed cards. The bar chart below
+breaks each rank's jobs into **critical vs non-critical** counts, stacked in
+two pastel colours with the counts labelled on each bar.
+
 ### Job Frequency Matrix by Rank
 
 A Rank × Frequency pivot (with Grand Total row/column) showing job counts for
 every frequency within the selected period (and running-hour threshold, if
-enabled), heat-mapped from green (low) to red (high) — mirrors the classic
-"Low-Frequency Jobs by Performing Rank" Excel pivot used for manning/workload
-reviews.
+enabled), heat-mapped on a blue sequential scale (light = low, dark = high) —
+mirrors the classic "Low-Frequency Jobs by Performing Rank" Excel pivot used
+for manning/workload reviews.
 
 Both the summary table and the matrix can be exported to Excel.
