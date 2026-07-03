@@ -4,6 +4,7 @@ import re
 import numpy as np
 import pandas as pd
 import plotly.express as px
+import plotly.graph_objects as go
 import streamlit as st
 
 st.set_page_config(
@@ -28,6 +29,8 @@ UNIT_ORDER = {"Days": 0, "Months": 1, "Hours": 2}
 
 BLUE = "#2a78d6"
 AQUA = "#1baf7a"
+PASTEL_CRITICAL = "#f5b0a8"      # soft coral — critical jobs
+PASTEL_NONCRIT = "#a9cce8"       # soft blue — non-critical jobs
 
 # ─────────────────────────────────────────────────────────────────────────────
 # HELPERS
@@ -82,6 +85,21 @@ def primary_rank(df):
 
 def clean_opts(series):
     return sorted({str(v).strip() for v in series.dropna() if str(v).strip() not in ("", "nan")})
+
+
+def verifier_of(rank):
+    """Who signs off the job report done by this rank.
+    Chief Engineer verifies all engine-side ranks (engineers + electrical),
+    including his own jobs. Master verifies the deck watch officers plus his own.
+    """
+    r = str(rank).lower()
+    if "electr" in r:                    # electrical officer/electrician/electro-technical
+        return "Chief Engineer"
+    if "engineer" in r:                  # 2nd/3rd/4th/junior/chief engineers (self-verified)
+        return "Chief Engineer"
+    if rank in ("Master", "Chief Officer", "2nd Officer", "3rd Officer"):
+        return "Master"
+    return None
 
 
 def to_excel(dfs: dict) -> bytes:
@@ -222,7 +240,7 @@ rank_opts = clean_opts(df_f["Rank"])
 st.divider()
 st.subheader(f"📊 Rank Reporting Effort — next {period_label}")
 
-metric_slots = st.columns(3)
+kpi_slots = st.columns(5)
 chart_col, filter_col = st.columns([3, 1])
 
 with filter_col:
@@ -269,28 +287,58 @@ summary["Running-Hour Jobs"] = summary["Total Jobs"] - summary["Time-Based Jobs"
 summary = summary.sort_values(f"Est. Reports in {period_label}", ascending=False)
 summary_display = summary.round(1)
 
-metric_slots[0].metric("Ranks in scope", len(summary))
-metric_slots[1].metric(f"Total est. reports / {period_label}", f"{summary['Est. Reports in ' + period_label].sum():,.0f}")
+# Verifying effort — reports a supervisor must sign off in the period
+df_f["Verifier"] = df_f["Rank"].map(verifier_of)
+ce_verify = df_f.loc[df_f["Verifier"] == "Chief Engineer", "Expected Occurrences"].sum()
+master_verify = df_f.loc[df_f["Verifier"] == "Master", "Expected Occurrences"].sum()
 top_rank = summary.index[0] if len(summary) else "—"
-metric_slots[2].metric("Highest-effort rank", top_rank)
 
-chart_df = summary.reset_index().sort_values(f"Est. Reports in {period_label}", ascending=True)
-fig = px.bar(
-    chart_df,
-    x=f"Est. Reports in {period_label}",
-    y="Rank",
-    orientation="h",
-    text=chart_df[f"Est. Reports in {period_label}"].round(1),
+kpis = [
+    ("Ranks in scope", str(len(summary)), None),
+    (f"Total est. reports / {period_label}",
+     f"{summary['Est. Reports in ' + period_label].sum():,.0f}", None),
+    ("Highest-effort rank", top_rank, None),
+    (f"⚙ CE verifying effort / {period_label}", f"{ce_verify:,.0f}",
+     "Estimated job reports the Chief Engineer must verify — all engineer and "
+     "electrical ranks' jobs (including the Chief Engineer's own)."),
+    (f"🎖 Master verifying effort / {period_label}", f"{master_verify:,.0f}",
+     "Estimated job reports the Master must verify — Master, Chief Officer, "
+     "2nd Officer and 3rd Officer jobs."),
+]
+for slot, (label, value, help_txt) in zip(kpi_slots, kpis):
+    with slot, st.container(border=True):
+        st.metric(label, value, help=help_txt)
+
+# Bar chart — critical vs non-critical job counts per rank (dual pastel, stacked)
+if "Critical" in df_f.columns:
+    df_f["_is_crit"] = df_f["Critical"].astype(str).str.strip() == "C"
+else:
+    df_f["_is_crit"] = False
+counts = df_f.groupby("Rank")["_is_crit"].agg(Critical="sum", Total="size")
+counts["Non-Critical"] = counts["Total"] - counts["Critical"]
+counts = counts.reindex(summary.index[::-1])   # highest-effort rank on top
+
+fig = go.Figure()
+fig.add_bar(
+    y=counts.index, x=counts["Non-Critical"], name="Non-Critical", orientation="h",
+    marker_color=PASTEL_NONCRIT, text=counts["Non-Critical"], textposition="inside",
+    insidetextanchor="middle",
 )
-fig.update_traces(marker_color=BLUE, textposition="outside", cliponaxis=False)
+fig.add_bar(
+    y=counts.index, x=counts["Critical"], name="Critical", orientation="h",
+    marker_color=PASTEL_CRITICAL, text=counts["Critical"], textposition="inside",
+    insidetextanchor="middle",
+)
 fig.update_layout(
-    height=max(320, 34 * len(chart_df)),
+    barmode="stack",
+    height=max(320, 34 * len(counts)),
     plot_bgcolor="#fcfcfb",
     paper_bgcolor="#fcfcfb",
-    xaxis_title=f"Estimated job reports in next {period_label}",
+    xaxis_title="Number of jobs",
     yaxis_title=None,
     font_color="#0b0b0b",
-    margin=dict(l=10, r=40, t=10, b=10),
+    margin=dict(l=10, r=20, t=10, b=10),
+    legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
 )
 fig.update_xaxes(gridcolor="#e1e0d9", zerolinecolor="#c3c2b7")
 with chart_col:
