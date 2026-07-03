@@ -1,8 +1,9 @@
-# Vessel PMS – Rank Reporting Effort
+# PMS Jobs Reporting & Verification Effort Dashboard
 
 A Streamlit tool that estimates how many planned-maintenance job reports each
-onboard rank must submit over a chosen period, based on the job's reporting
-frequency in a JiBe (or similar) PMS export.
+onboard rank must submit — and each supervisor must verify — over a chosen
+period, based on the job's reporting frequency in a JiBe (or similar) PMS
+export.
 
 ## Quick start (local)
 
@@ -52,9 +53,16 @@ same period and filters as everything else:
 - **Master verifying effort** — sum of estimated reports for Master, Chief
   Officer, 2nd Officer and 3rd Officer jobs.
 
-All five KPIs are shown as a single row of boxed cards. The bar chart below
-breaks each rank's jobs into **critical vs non-critical** counts, stacked in
-two pastel colours with the counts labelled on each bar.
+All five KPIs are shown as a single row of boxed cards. Below them, side by
+side:
+
+- **Jobs by rank — critical vs non-critical** — a stacked horizontal bar of
+  each rank's job counts in two pastel colours.
+- **Reporting effort** and **Verifying effort** matrices — ranks (or
+  verifiers) × the four periods (1 week, 1 month, 3 months, 6 months), with a
+  Grand Total row and the same blue heatmap. The reporting and verifying
+  grand totals are equal (every report is verified by someone), and match the
+  KPI cards. Both matrices export to Excel.
 
 ### Job Frequency Matrix by Rank
 

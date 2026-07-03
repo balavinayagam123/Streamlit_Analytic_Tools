@@ -8,7 +8,7 @@ import plotly.graph_objects as go
 import streamlit as st
 
 st.set_page_config(
-    page_title="Vessel PMS – Rank Reporting Effort",
+    page_title="PMS Jobs Reporting & Verification Effort",
     page_icon="🧭",
     layout="wide",
 )
@@ -42,10 +42,11 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-st.title("🧭 Vessel PMS – Rank Reporting Effort")
+st.title("🧭 PMS Jobs Reporting & Verification Effort Dashboard")
 st.markdown(
     "Upload a JiBe (or similar) PMS job export to see how many job reports "
-    "each rank must submit over a selected period, based on job frequency."
+    "each rank must submit — and each supervisor must verify — over a selected "
+    "period, based on job frequency."
 )
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -60,6 +61,12 @@ BLUE = "#2a78d6"
 AQUA = "#1baf7a"
 PASTEL_CRITICAL = "#f5b0a8"      # soft coral — critical jobs
 PASTEL_NONCRIT = "#a9cce8"       # soft blue — non-critical jobs
+
+# Distinct per-rank colours for the effort-by-period chart
+RANK_PALETTE = [
+    "#2a78d6", "#1baf7a", "#eda100", "#e34948", "#9085e9",
+    "#e87ba4", "#eb6834", "#009aa6", "#6b7280", "#b5179e",
+]
 
 # ─────────────────────────────────────────────────────────────────────────────
 # HELPERS
@@ -224,6 +231,9 @@ df["Freq Value"] = freq_parsed.apply(lambda t: t[0])
 df["Freq Unit"] = freq_parsed.apply(lambda t: t[1])
 df["Freq Days"] = freq_parsed.apply(lambda t: t[2])
 df["Is Time Based"] = df["Freq Unit"].isin(["Days", "Months"])
+df = primary_rank(df)
+rank_opts = clean_opts(df["Rank"])
+rank_colors = {r: RANK_PALETTE[i % len(RANK_PALETTE)] for i, r in enumerate(rank_opts)}
 
 with st.sidebar:
     st.divider()
@@ -244,7 +254,8 @@ with st.expander("🔧 Filter Jobs", expanded=False):
     with fc3:
         status_f = st.multiselect("Job Status", options=clean_opts(df.get("Job Status", pd.Series(dtype=str))))
     with fc4:
-        crit_only = st.checkbox("Critical jobs only (C flag)")
+        rank_f = st.multiselect("Rank(s) to include", options=rank_opts, default=rank_opts)
+    crit_only = st.checkbox("Critical jobs only (C flag)")
 
 df_f = df.copy()
 if dept_f and "Department" in df_f.columns:
@@ -259,9 +270,8 @@ if mach_f and "Machinery Location" in df_f.columns:
     df_f = df_f[df_f["Machinery Location"].isin(mach_f)]
 if src_f and "Job Source" in df_f.columns:
     df_f = df_f[df_f["Job Source"].isin(src_f)]
-
-df_f = primary_rank(df_f)
-rank_opts = clean_opts(df_f["Rank"])
+if rank_f:
+    df_f = df_f[df_f["Rank"].isin(rank_f)]
 
 # ─────────────────────────────────────────────────────────────────────────────
 # RANK EFFORT SUMMARY
@@ -270,31 +280,28 @@ rank_opts = clean_opts(df_f["Rank"])
 st.divider()
 st.subheader(f"📊 Rank Reporting Effort — next {period_label}")
 
-kpi_slots = st.columns(5)
-chart_col, filter_col = st.columns([3, 1])
-
-with filter_col:
-    st.markdown("**Rank(s) to include**")
-    rank_f = st.multiselect(
-        "Rank(s) to include", options=rank_opts, default=rank_opts, label_visibility="collapsed"
-    )
-
-df_f = df_f[df_f["Rank"].isin(rank_f)]
-
 if df_f.empty:
     st.warning("No jobs match the current filters.")
     st.stop()
+
+kpi_slots = st.columns(5)
+chart_col, effort_col = st.columns([3, 2])
+
+# Daily occurrence rate per job — occurrences per day (scales linearly with period)
+df_f["Daily Rate"] = np.where(df_f["Is Time Based"], 1.0 / df_f["Freq Days"], 0.0)
+if include_hours:
+    hrs_mask = df_f["Freq Unit"] == "Hours"
+    df_f.loc[hrs_mask, "Daily Rate"] = avg_hours_per_day / df_f.loc[hrs_mask, "Freq Value"]
 
 # Expected occurrences within the selected period
 df_f["Expected Occurrences"] = np.where(
     df_f["Is Time Based"], period_days / df_f["Freq Days"], np.nan
 )
 if include_hours:
-    hrs_mask = df_f["Freq Unit"] == "Hours"
-    equiv_days = df_f["Freq Value"] / avg_hours_per_day
-    df_f.loc[hrs_mask, "Expected Occurrences"] = period_days / equiv_days[hrs_mask]
+    df_f.loc[hrs_mask, "Expected Occurrences"] = period_days * df_f.loc[hrs_mask, "Daily Rate"]
 
 df_f["Due At Least Once"] = df_f["Expected Occurrences"].fillna(0) >= 1
+df_f["Verifier"] = df_f["Rank"].map(verifier_of)
 
 summary = (
     df_f.groupby("Rank")
@@ -318,7 +325,6 @@ summary = summary.sort_values(f"Est. Reports in {period_label}", ascending=False
 summary_display = summary.round(1)
 
 # Verifying effort — reports a supervisor must sign off in the period
-df_f["Verifier"] = df_f["Rank"].map(verifier_of)
 ce_verify = df_f.loc[df_f["Verifier"] == "Chief Engineer", "Expected Occurrences"].sum()
 master_verify = df_f.loc[df_f["Verifier"] == "Master", "Expected Occurrences"].sum()
 top_rank = summary.index[0] if len(summary) else "—"
@@ -386,7 +392,61 @@ fig.update_layout(
 fig.update_xaxes(gridcolor="#eef1f5", zerolinecolor="#c3c2b7", showline=False)
 fig.update_yaxes(showgrid=False, ticksuffix="  ")
 with chart_col:
+    st.markdown("**Jobs by rank — critical vs non-critical**")
     st.plotly_chart(fig, use_container_width=True)
+
+# ── Effort-by-period matrices — reporting & verifying across all periods ──────
+period_names = list(PERIODS.keys())
+period_days_list = list(PERIODS.values())
+rate_by_rank = df_f.groupby("Rank")["Daily Rate"].sum()
+rate_by_verifier = df_f.groupby("Verifier")["Daily Rate"].sum()
+
+
+def effort_matrix(rate_series, row_order):
+    # keep unrounded so the Grand Total matches the KPI figures exactly;
+    # rounding happens only at display time via the styler format
+    mat = pd.DataFrame(
+        {p: rate_series.reindex(row_order).fillna(0) * d
+         for p, d in zip(period_names, period_days_list)},
+        index=row_order,
+    )
+    mat.index.name = "Rank"
+    total = mat.sum(axis=0)
+    total.name = "Grand Total"
+    return pd.concat([mat, total.to_frame().T])
+
+
+def style_effort(mat):
+    data_idx = [i for i in mat.index if i != "Grand Total"]
+
+    def col_style(col):
+        sub = col.loc[data_idx]
+        vmin, vmax = (sub.min(), sub.max()) if len(sub) else (0, 1)
+        return [
+            "background-color:#c6d9ec;font-weight:bold" if idx == "Grand Total"
+            else heat_color(v, vmin, vmax)
+            for idx, v in col.items()
+        ]
+
+    return mat.style.apply(col_style, axis=0).format("{:,.0f}")
+
+
+ranks_ordered = list(rate_by_rank.sort_values(ascending=False).index)
+report_matrix = effort_matrix(rate_by_rank, ranks_ordered)
+
+verifiers_present = [v for v in ("Master", "Chief Engineer") if v in rate_by_verifier.index]
+verify_matrix = effort_matrix(rate_by_verifier, verifiers_present)
+
+with effort_col:
+    st.markdown("**Reporting effort** — estimated job reports per period")
+    st.dataframe(style_effort(report_matrix), use_container_width=True)
+    st.markdown("**Verifying effort** — reports to sign off per period")
+    st.dataframe(style_effort(verify_matrix), use_container_width=True)
+    st.download_button(
+        "⬇ Download effort matrices (Excel)",
+        data=to_excel({"Reporting Effort": report_matrix, "Verifying Effort": verify_matrix}),
+        file_name="reporting_verifying_effort_by_period.xlsx",
+    )
 
 summary_cols = ["Total Jobs", "Time-Based Jobs", "Running-Hour Jobs",
                 f"Jobs Due ≥1x in {period_label}", f"Est. Reports in {period_label}"]
