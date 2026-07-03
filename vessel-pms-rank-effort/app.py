@@ -13,6 +13,35 @@ st.set_page_config(
     layout="wide",
 )
 
+st.markdown(
+    """
+    <style>
+    /* KPI cards — full-width labels, wrapping, no ellipsis truncation */
+    [data-testid="stMetric"] { padding: 0.25rem 0.25rem; }
+    [data-testid="stMetricLabel"] { white-space: normal !important; }
+    [data-testid="stMetricLabel"] p {
+        white-space: normal !important;
+        font-size: 0.82rem;
+        line-height: 1.2;
+        font-weight: 600;
+        color: #52514e;
+    }
+    [data-testid="stMetricValue"] {
+        font-size: 1.55rem;
+        line-height: 1.15;
+    }
+    [data-testid="stMetricValue"] div,
+    [data-testid="stMetricValue"] p {
+        white-space: normal !important;
+        overflow: visible !important;
+        text-overflow: clip !important;
+        overflow-wrap: anywhere;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
 st.title("🧭 Vessel PMS – Rank Reporting Effort")
 st.markdown(
     "Upload a JiBe (or similar) PMS job export to see how many job reports "
@@ -110,8 +139,8 @@ def to_excel(dfs: dict) -> bytes:
     return buf.getvalue()
 
 
-# Excel-style 3-color scale: green (low) -> yellow (mid) -> red (high)
-HEAT_GREEN, HEAT_YELLOW, HEAT_RED = (99, 190, 123), (255, 235, 132), (248, 105, 107)
+# Blue sequential scale: light (low) -> dark (high)
+HEAT_LIGHT, HEAT_DARK = (234, 243, 251), (33, 102, 172)   # #eaf3fb -> #2166ac
 
 
 def _mix(c1, c2, t):
@@ -119,9 +148,10 @@ def _mix(c1, c2, t):
 
 
 def heat_color(v, vmin, vmax):
-    t = 0.5 if vmax == vmin else (v - vmin) / (vmax - vmin)
-    rgb = _mix(HEAT_GREEN, HEAT_YELLOW, t / 0.5) if t <= 0.5 else _mix(HEAT_YELLOW, HEAT_RED, (t - 0.5) / 0.5)
-    return f"background-color: rgb{rgb}"
+    t = 0.0 if vmax == vmin else (v - vmin) / (vmax - vmin)
+    rgb = _mix(HEAT_LIGHT, HEAT_DARK, t)
+    text = "#ffffff" if t > 0.55 else "#0b0b0b"    # keep contrast on dark cells
+    return f"background-color: rgb{rgb}; color: {text}"
 
 
 def heatmap_column(col):
@@ -294,14 +324,17 @@ master_verify = df_f.loc[df_f["Verifier"] == "Master", "Expected Occurrences"].s
 top_rank = summary.index[0] if len(summary) else "—"
 
 kpis = [
-    ("Ranks in scope", str(len(summary)), None),
-    (f"Total est. reports / {period_label}",
-     f"{summary['Est. Reports in ' + period_label].sum():,.0f}", None),
-    ("Highest-effort rank", top_rank, None),
-    (f"⚙ CE verifying effort / {period_label}", f"{ce_verify:,.0f}",
+    ("Ranks in scope", str(len(summary)),
+     "Number of performing ranks after all filters."),
+    ("Total est. reports",
+     f"{summary['Est. Reports in ' + period_label].sum():,.0f}",
+     f"Total estimated job reports across all ranks in the next {period_label}."),
+    ("Highest-effort rank", top_rank,
+     "Rank with the most estimated job reports in the period."),
+    ("⚙ CE verifying effort", f"{ce_verify:,.0f}",
      "Estimated job reports the Chief Engineer must verify — all engineer and "
      "electrical ranks' jobs (including the Chief Engineer's own)."),
-    (f"🎖 Master verifying effort / {period_label}", f"{master_verify:,.0f}",
+    ("🎖 Master verifying effort", f"{master_verify:,.0f}",
      "Estimated job reports the Master must verify — Master, Chief Officer, "
      "2nd Officer and 3rd Officer jobs."),
 ]
@@ -318,29 +351,40 @@ counts = df_f.groupby("Rank")["_is_crit"].agg(Critical="sum", Total="size")
 counts["Non-Critical"] = counts["Total"] - counts["Critical"]
 counts = counts.reindex(summary.index[::-1])   # highest-effort rank on top
 
+def seg_text(series):
+    # only label a segment when it is wide enough to hold the number cleanly
+    cutoff = max(counts["Total"].max() * 0.04, 1)
+    return [f"{v:,.0f}" if v >= cutoff else "" for v in series]
+
 fig = go.Figure()
 fig.add_bar(
     y=counts.index, x=counts["Non-Critical"], name="Non-Critical", orientation="h",
-    marker_color=PASTEL_NONCRIT, text=counts["Non-Critical"], textposition="inside",
-    insidetextanchor="middle",
+    marker=dict(color=PASTEL_NONCRIT, line=dict(color="#ffffff", width=1)),
+    text=seg_text(counts["Non-Critical"]), textposition="inside", insidetextanchor="middle",
+    textfont=dict(color="#1b4a73", size=13),
+    hovertemplate="%{y}<br>Non-Critical: %{x:,.0f}<extra></extra>",
 )
 fig.add_bar(
     y=counts.index, x=counts["Critical"], name="Critical", orientation="h",
-    marker_color=PASTEL_CRITICAL, text=counts["Critical"], textposition="inside",
-    insidetextanchor="middle",
+    marker=dict(color=PASTEL_CRITICAL, line=dict(color="#ffffff", width=1)),
+    text=[f"{v:,.0f}" if v > 0 else "" for v in counts["Critical"]],
+    textposition="outside", textfont=dict(color="#b0413a", size=13), cliponaxis=False,
+    hovertemplate="%{y}<br>Critical: %{x:,.0f}<extra></extra>",
 )
 fig.update_layout(
     barmode="stack",
-    height=max(320, 34 * len(counts)),
+    bargap=0.32,
+    height=max(340, 44 * len(counts)),
     plot_bgcolor="#fcfcfb",
     paper_bgcolor="#fcfcfb",
     xaxis_title="Number of jobs",
     yaxis_title=None,
-    font_color="#0b0b0b",
-    margin=dict(l=10, r=20, t=10, b=10),
-    legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+    font=dict(color="#0b0b0b", size=13),
+    margin=dict(l=10, r=60, t=30, b=10),
+    legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1, title_text=""),
 )
-fig.update_xaxes(gridcolor="#e1e0d9", zerolinecolor="#c3c2b7")
+fig.update_xaxes(gridcolor="#eef1f5", zerolinecolor="#c3c2b7", showline=False)
+fig.update_yaxes(showgrid=False, ticksuffix="  ")
 with chart_col:
     st.plotly_chart(fig, use_container_width=True)
 
