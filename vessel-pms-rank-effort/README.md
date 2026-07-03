@@ -63,6 +63,13 @@ side:
   Grand Total row and the same blue heatmap. The reporting and verifying
   grand totals are equal (every report is verified by someone), and match the
   KPI cards. Both matrices export to Excel.
+- **Short-cycle reporting load** — a stacked bar (one per period) that splits
+  the reporting volume by frequency band (≤7 Days, 8 Days–1 Month, 1–3 Months,
+  …) in a blue ramp. A cumulative threshold selector (≤7 days / ≤1 month /
+  ≤3 months / ≤6 months / all) focuses the view on the high-churn items, and
+  a caption reports the short-cycle total and its % share of all reports.
+  This isolates the frequent, low-frequency-interval jobs that dominate
+  day-to-day reporting workload.
 
 ### Job Frequency Matrix by Rank
 
