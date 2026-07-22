@@ -1,16 +1,22 @@
 import subprocess
 import sys
+import os
 
-# Auto-install Playwright browsers if missing (for Streamlit Cloud)
-def ensure_playwright_browsers():
-    try:
-        from playwright.sync_api import sync_playwright
-        sync_playwright().__enter__()
-    except Exception:
-        print("Installing Playwright browsers...")
-        subprocess.run([sys.executable, "-m", "playwright", "install", "chromium"], check=False)
-
-ensure_playwright_browsers()
+# Force Playwright browser installation on app startup (Streamlit Cloud fix)
+print("Checking Playwright installation...")
+try:
+    result = subprocess.run(
+        [sys.executable, "-m", "playwright", "install", "chromium"],
+        capture_output=True,
+        text=True,
+        timeout=120
+    )
+    if result.returncode == 0:
+        print("✅ Playwright browsers ready")
+    else:
+        print(f"⚠️ Playwright install output: {result.stderr}")
+except Exception as e:
+    print(f"⚠️ Playwright installation note: {e}")
 
 # ─────────────────────────────────────────────────────────────────────────────
 
