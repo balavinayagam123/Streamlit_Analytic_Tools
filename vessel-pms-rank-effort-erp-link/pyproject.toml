@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pms-reporting-dashboard"
+version = "1.0.0"
+description = "PMS Jobs Reporting & Verification Effort Dashboard with JiBe ERP integration"
+authors = [{name = "Angelo-Eastern Ship Management"}]
+requires-python = ">=3.8"
+dependencies = [
+    "streamlit",
+    "pandas",
+    "numpy",
+    "plotly",
+    "openpyxl",
+    "playwright",
+]
+
+[project.urls]
+Repository = "https://github.com/balavinayagam123/streamlit_analytic_tools"
