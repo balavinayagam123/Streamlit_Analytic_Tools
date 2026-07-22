@@ -1,3 +1,19 @@
+import subprocess
+import sys
+
+# Auto-install Playwright browsers if missing (for Streamlit Cloud)
+def ensure_playwright_browsers():
+    try:
+        from playwright.sync_api import sync_playwright
+        sync_playwright().__enter__()
+    except Exception:
+        print("Installing Playwright browsers...")
+        subprocess.run([sys.executable, "-m", "playwright", "install", "chromium"], check=False)
+
+ensure_playwright_browsers()
+
+# ─────────────────────────────────────────────────────────────────────────────
+
 import streamlit as st
 
 st.set_page_config(
