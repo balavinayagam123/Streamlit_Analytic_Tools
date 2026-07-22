@@ -1,6 +1,8 @@
 import io
 import os
 import tempfile
+import subprocess
+import sys
 from pathlib import Path
 
 import pandas as pd
@@ -58,7 +60,7 @@ if uploaded_file is not None:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# OPTION 2: JiBe URL Input
+# OPTION 2: JiBe URL Input with Playwright
 # ─────────────────────────────────────────────────────────────────────────────
 
 st.divider()
@@ -103,14 +105,24 @@ if jibe_url:
         with st.spinner("Fetching data from JiBe..."):
             try:
                 if fetch_method == "Playwright (Recommended)":
-                    # Try to use Playwright to automate the export
+                    # Ensure Playwright is installed
+                    try:
+                        subprocess.run(
+                            [sys.executable, "-m", "playwright", "install", "chromium"],
+                            capture_output=True,
+                            timeout=60
+                        )
+                    except Exception as install_err:
+                        st.warning(f"Could not install Playwright: {install_err}")
+
                     try:
                         from playwright.sync_api import sync_playwright
                     except ImportError:
                         st.error(
-                            "❌ Playwright is not installed. Install it with: "
-                            "`pip install playwright` and run `playwright install chromium`"
+                            "❌ Playwright is not available. Using manual method instead.\n\n"
+                            "Go to the link below, export the file, and upload it above."
                         )
+                        st.markdown(f"[Open JiBe Job Status]({jibe_url})")
                         st.stop()
 
                     with sync_playwright() as p:
@@ -118,15 +130,11 @@ if jibe_url:
                         context = browser.new_context()
                         page = context.new_page()
 
-                        # Navigate to the JiBe URL
                         st.info("📍 Navigating to JiBe job status page...")
                         page.goto(jibe_url, wait_until="networkidle", timeout=30000)
-
-                        # Wait for the page to load
                         page.wait_for_load_state("networkidle")
 
                         st.info("🔍 Looking for export button...")
-                        # Try to click the export button (adjust selector if needed)
                         try:
                             page.click("button:has-text('Export')")
                             page.wait_for_load_state("networkidle")
@@ -157,6 +165,7 @@ if jibe_url:
 
             except Exception as e:
                 st.error(f"❌ Error during fetch: {e}")
+                st.info("💡 Try uploading a file manually using Option 1 instead.")
 
 
 # ─────────────────────────────────────────────────────────────────────────────
