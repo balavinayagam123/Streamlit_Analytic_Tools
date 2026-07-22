@@ -1,0 +1,13 @@
+libglib2.0-0
+libpangoft2-1.0-0
+libx11-6
+libx11-xcb1
+libxcb1
+libxext6
+libxrender1
+fonts-liberation
+libnss3
+libappindicator3-1
+lsb-release
+xdg-utils
+wget
