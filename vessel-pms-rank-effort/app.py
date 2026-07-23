@@ -74,18 +74,20 @@ FREQ_BANDS = [
     ("8 Days – 1 Month", 30),
     ("1 – 3 Months", 90),
     ("3 – 6 Months", 180),
-    ("> 6 Months", float("inf")),
+    ("6 – 12 Months", 360),
+    ("> 12 Months", float("inf")),
 ]
 BAND_COLORS = {
     "≤ 7 Days": "#1c4e80",
     "8 Days – 1 Month": "#2a78d6",
     "1 – 3 Months": "#5598e7",
     "3 – 6 Months": "#9ec5f4",
-    "> 6 Months": "#cde2fb",
+    "6 – 12 Months": "#d4e6f9",
+    "> 12 Months": "#eef3fa",
 }
 FREQ_THRESHOLDS = {
     "≤ 7 Days": 7, "≤ 1 Month": 30, "≤ 3 Months": 90,
-    "≤ 6 Months": 180, "All frequencies": float("inf"),
+    "≤ 6 Months": 180, "≤ 12 Months": 360, "All frequencies": float("inf"),
 }
 
 
@@ -422,90 +424,90 @@ with chart_col:
     st.markdown("**Jobs by rank — critical vs non-critical**")
     st.plotly_chart(fig, use_container_width=True)
 
-    # ── Short-cycle reporting load — reports by frequency band per period ─────
-    st.markdown("**Short-cycle reporting load** — reports by frequency band per period")
+# ── Short-cycle reporting load — reports by frequency band per period ─────
+st.markdown("**Short-cycle reporting load** — reports by frequency band per period")
+st.caption(
+    "How many job reports the high-churn (short-frequency) items generate over each "
+    "period. Calendar-frequency jobs only."
+)
+thr_label = st.radio(
+    "Focus on jobs with frequency:", list(FREQ_THRESHOLDS.keys()),
+    index=1, horizontal=True, key="short_cycle_threshold",
+)
+thr_days = FREQ_THRESHOLDS[thr_label]
+sc_names = list(PERIODS.keys())
+sc_days = list(PERIODS.values())
+
+tb_all = df_f[df_f["Is Time Based"]].copy()
+tb_all["Band"] = tb_all["Freq Days"].apply(band_of)
+included_bands = [n for n, hi in FREQ_BANDS if hi <= thr_days] or [FREQ_BANDS[0][0]]
+tb = tb_all[tb_all["Band"].isin(included_bands)]
+
+if tb.empty:
+    st.info("No calendar-frequency jobs match the current filters and threshold.")
+else:
+    rate_by_band = tb.groupby("Band")["Daily Rate"].sum()
+    fig_sc = go.Figure()
+    for name in included_bands:            # short at bottom of the stack
+        r = rate_by_band.get(name, 0.0)
+        fig_sc.add_bar(
+            x=sc_names, y=[r * d for d in sc_days],
+            name=name, marker_color=BAND_COLORS[name],
+            hovertemplate=f"<b>{name}</b><br>%{{x}} · %{{y:,.0f}} reports<extra></extra>",
+        )
+    fig_sc.update_layout(
+        barmode="stack", bargap=0.45,
+        height=360, plot_bgcolor="#fcfcfb", paper_bgcolor="#fcfcfb",
+        yaxis_title="Estimated job reports", xaxis_title=None,
+        font=dict(color="#0b0b0b", size=13),
+        margin=dict(l=10, r=10, t=30, b=10),
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, x=0, title_text=""),
+    )
+    fig_sc.update_xaxes(categoryorder="array", categoryarray=sc_names, showgrid=False)
+    fig_sc.update_yaxes(gridcolor="#eef1f5", zerolinecolor="#c3c2b7")
+
+    # Create matrix table for breakdown — all frequency bands (FULL WIDTH)
+    sc_col, matrix_col = st.columns([1, 1])
+
+    with sc_col:
+        st.plotly_chart(fig_sc, use_container_width=True)
+
+    with matrix_col:
+        st.markdown("**Breakdown by Frequency Band**")
+        matrix_data = {}
+        # Include all possible frequency bands, not just included_bands
+        for band_name, _ in FREQ_BANDS:
+            r = rate_by_band.get(band_name, 0.0)
+            matrix_data[band_name] = {p: int(r * d) for p, d in zip(sc_names, sc_days)}
+
+        # Create DataFrame for the matrix
+        sc_matrix = pd.DataFrame(matrix_data).T
+        sc_matrix["Total"] = sc_matrix.sum(axis=1)
+        sc_matrix.loc["Grand Total"] = sc_matrix.sum()
+
+        # Style the matrix
+        def style_sc_matrix(row):
+            styles = []
+            for col in row.index:
+                if row.name == "Grand Total":
+                    styles.append("background-color:#c6d9ec;font-weight:bold;text-align:right")
+                else:
+                    val = row[col]
+                    styles.append("background-color:#e8f1f8;text-align:right" if col != "Total"
+                                 else "background-color:#dce6f1;font-weight:bold;text-align:right")
+            return styles
+
+        styled_sc = sc_matrix.style.apply(style_sc_matrix, axis=1).format("{:,.0f}")
+        st.dataframe(styled_sc, use_container_width=True, height=360)
+
+    short_reports = tb["Daily Rate"].sum() * period_days
+    total_reports = tb_all["Daily Rate"].sum() * period_days
+    pct = (short_reports / total_reports * 100) if total_reports else 0
     st.caption(
-        "How many job reports the high-churn (short-frequency) items generate over each "
-        "period. Calendar-frequency jobs only."
+        f"In the next **{period_label}**, jobs **{thr_label}** account for "
+        f"**{short_reports:,.0f}** reports — **{pct:.0f}%** of all "
+        f"{total_reports:,.0f} calendar-job reports in that period."
     )
-    thr_label = st.radio(
-        "Focus on jobs with frequency:", list(FREQ_THRESHOLDS.keys()),
-        index=1, horizontal=True, key="short_cycle_threshold",
-    )
-    thr_days = FREQ_THRESHOLDS[thr_label]
-    sc_names = list(PERIODS.keys())
-    sc_days = list(PERIODS.values())
-
-    tb_all = df_f[df_f["Is Time Based"]].copy()
-    tb_all["Band"] = tb_all["Freq Days"].apply(band_of)
-    included_bands = [n for n, hi in FREQ_BANDS if hi <= thr_days] or [FREQ_BANDS[0][0]]
-    tb = tb_all[tb_all["Band"].isin(included_bands)]
-
-    if tb.empty:
-        st.info("No calendar-frequency jobs match the current filters and threshold.")
-    else:
-        rate_by_band = tb.groupby("Band")["Daily Rate"].sum()
-        fig_sc = go.Figure()
-        for name in included_bands:            # short at bottom of the stack
-            r = rate_by_band.get(name, 0.0)
-            fig_sc.add_bar(
-                x=sc_names, y=[r * d for d in sc_days],
-                name=name, marker_color=BAND_COLORS[name],
-                hovertemplate=f"<b>{name}</b><br>%{{x}} · %{{y:,.0f}} reports<extra></extra>",
-            )
-        fig_sc.update_layout(
-            barmode="stack", bargap=0.45,
-            height=360, plot_bgcolor="#fcfcfb", paper_bgcolor="#fcfcfb",
-            yaxis_title="Estimated job reports", xaxis_title=None,
-            font=dict(color="#0b0b0b", size=13),
-            margin=dict(l=10, r=10, t=30, b=10),
-            legend=dict(orientation="h", yanchor="bottom", y=1.02, x=0, title_text=""),
-        )
-        fig_sc.update_xaxes(categoryorder="array", categoryarray=sc_names, showgrid=False)
-        fig_sc.update_yaxes(gridcolor="#eef1f5", zerolinecolor="#c3c2b7")
-
-        # Create matrix table for breakdown — all frequency bands
-        sc_col, matrix_col = st.columns([1, 1])
-
-        with sc_col:
-            st.plotly_chart(fig_sc, use_container_width=True)
-
-        with matrix_col:
-            st.markdown("**Breakdown by Frequency Band**")
-            matrix_data = {}
-            # Include all possible frequency bands, not just included_bands
-            for band_name, _ in FREQ_BANDS:
-                r = rate_by_band.get(band_name, 0.0)
-                matrix_data[band_name] = {p: int(r * d) for p, d in zip(sc_names, sc_days)}
-
-            # Create DataFrame for the matrix
-            sc_matrix = pd.DataFrame(matrix_data).T
-            sc_matrix["Total"] = sc_matrix.sum(axis=1)
-            sc_matrix.loc["Grand Total"] = sc_matrix.sum()
-
-            # Style the matrix
-            def style_sc_matrix(row):
-                styles = []
-                for col in row.index:
-                    if row.name == "Grand Total":
-                        styles.append("background-color:#c6d9ec;font-weight:bold;text-align:right")
-                    else:
-                        val = row[col]
-                        styles.append("background-color:#e8f1f8;text-align:right" if col != "Total"
-                                     else "background-color:#dce6f1;font-weight:bold;text-align:right")
-                return styles
-
-            styled_sc = sc_matrix.style.apply(style_sc_matrix, axis=1).format("{:,.0f}")
-            st.dataframe(styled_sc, use_container_width=True, height=360)
-
-        short_reports = tb["Daily Rate"].sum() * period_days
-        total_reports = tb_all["Daily Rate"].sum() * period_days
-        pct = (short_reports / total_reports * 100) if total_reports else 0
-        st.caption(
-            f"In the next **{period_label}**, jobs **{thr_label}** account for "
-            f"**{short_reports:,.0f}** reports — **{pct:.0f}%** of all "
-            f"{total_reports:,.0f} calendar-job reports in that period."
-        )
 
 # ── Effort-by-period matrices — reporting & verifying across all periods ──────
 period_names = list(PERIODS.keys())
