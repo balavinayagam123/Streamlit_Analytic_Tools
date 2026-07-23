@@ -464,8 +464,8 @@ with chart_col:
         fig_sc.update_xaxes(categoryorder="array", categoryarray=sc_names, showgrid=False)
         fig_sc.update_yaxes(gridcolor="#eef1f5", zerolinecolor="#c3c2b7")
 
-        # Create matrix table for breakdown
-        sc_col, matrix_col = st.columns([2, 1])
+        # Create matrix table for breakdown — all frequency bands
+        sc_col, matrix_col = st.columns([1, 1])
 
         with sc_col:
             st.plotly_chart(fig_sc, use_container_width=True)
@@ -473,9 +473,10 @@ with chart_col:
         with matrix_col:
             st.markdown("**Breakdown by Frequency Band**")
             matrix_data = {}
-            for band in included_bands:
-                r = rate_by_band.get(band, 0.0)
-                matrix_data[band] = {p: int(r * d) for p, d in zip(sc_names, sc_days)}
+            # Include all possible frequency bands, not just included_bands
+            for band_name, _ in FREQ_BANDS:
+                r = rate_by_band.get(band_name, 0.0)
+                matrix_data[band_name] = {p: int(r * d) for p, d in zip(sc_names, sc_days)}
 
             # Create DataFrame for the matrix
             sc_matrix = pd.DataFrame(matrix_data).T
