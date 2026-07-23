@@ -475,13 +475,26 @@ else:
     with matrix_col:
         st.markdown("**Breakdown by Frequency Band**")
         matrix_data = {}
-        # Use tb_all (ALL time-based jobs, ignoring the threshold filter) so the
-        # Grand Total matches the Reporting-effort table exactly.
-        rate_by_band_all = tb_all.groupby("Band")["Daily Rate"].sum()
-        # Include all possible frequency bands, not just included_bands.
+        # Base the breakdown on ALL jobs that feed the Reporting-effort table
+        # (df_f), not just the calendar jobs. Running-hour jobs are counted in
+        # the reporting effort when the sidebar option is enabled; if we left
+        # them out here the two Grand Totals would never reconcile. They get
+        # their own "Running Hours" row so the totals match exactly.
+        bd = df_f.copy()
+        bd["_Band"] = np.where(
+            bd["Is Time Based"],
+            bd["Freq Days"].apply(band_of),
+            "Running Hours",
+        )
+        rate_by_band_all = bd.groupby("_Band")["Daily Rate"].sum()
+
+        band_rows = [name for name, _ in FREQ_BANDS]
+        if rate_by_band_all.get("Running Hours", 0.0) > 0:
+            band_rows.append("Running Hours")
+
         # Keep the raw (unrounded) product so the Grand Total sums cleanly, then
         # round only at display time — same approach as the effort matrices.
-        for band_name, _ in FREQ_BANDS:
+        for band_name in band_rows:
             r = rate_by_band_all.get(band_name, 0.0)
             matrix_data[band_name] = {p: r * d for p, d in zip(sc_names, sc_days)}
 
