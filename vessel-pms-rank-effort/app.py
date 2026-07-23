@@ -463,7 +463,39 @@ with chart_col:
         )
         fig_sc.update_xaxes(categoryorder="array", categoryarray=sc_names, showgrid=False)
         fig_sc.update_yaxes(gridcolor="#eef1f5", zerolinecolor="#c3c2b7")
-        st.plotly_chart(fig_sc, use_container_width=True)
+
+        # Create matrix table for breakdown
+        sc_col, matrix_col = st.columns([2, 1])
+
+        with sc_col:
+            st.plotly_chart(fig_sc, use_container_width=True)
+
+        with matrix_col:
+            st.markdown("**Breakdown by Frequency Band**")
+            matrix_data = {}
+            for band in included_bands:
+                r = rate_by_band.get(band, 0.0)
+                matrix_data[band] = {p: int(r * d) for p, d in zip(sc_names, sc_days)}
+
+            # Create DataFrame for the matrix
+            sc_matrix = pd.DataFrame(matrix_data).T
+            sc_matrix["Total"] = sc_matrix.sum(axis=1)
+            sc_matrix.loc["Grand Total"] = sc_matrix.sum()
+
+            # Style the matrix
+            def style_sc_matrix(row):
+                styles = []
+                for col in row.index:
+                    if row.name == "Grand Total":
+                        styles.append("background-color:#c6d9ec;font-weight:bold;text-align:right")
+                    else:
+                        val = row[col]
+                        styles.append("background-color:#e8f1f8;text-align:right" if col != "Total"
+                                     else "background-color:#dce6f1;font-weight:bold;text-align:right")
+                return styles
+
+            styled_sc = sc_matrix.style.apply(style_sc_matrix, axis=1).format("{:,.0f}")
+            st.dataframe(styled_sc, use_container_width=True, height=360)
 
         short_reports = tb["Daily Rate"].sum() * period_days
         total_reports = tb_all["Daily Rate"].sum() * period_days
